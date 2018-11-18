@@ -2,17 +2,15 @@
 #include <vector>
 
 #include "Poker/Poker.h"
+#include "Manager.h"
 
 using namespace std;
 
 int main()
 {
-	Poker poker(4);
-	poker.deal();
-	poker.printCard();
+	Manager manager;
+	manager.test();
 
-	poker.releaseCorner();
-	poker.printCard();
 
 	system("pause");
 	return 0;

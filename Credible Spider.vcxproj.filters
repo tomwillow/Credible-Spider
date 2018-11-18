@@ -21,9 +21,51 @@
     <ClCompile Include="Poker\Poker.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Poker\Card.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Poker\Deal.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Poker\Action.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Poker\Add13.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Poker\PMove.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Poker\ReleaseCorner.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Manager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Poker\Card.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Poker\Deal.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Poker\Action.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Poker\Add13.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Poker\PMove.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Poker\ReleaseCorner.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

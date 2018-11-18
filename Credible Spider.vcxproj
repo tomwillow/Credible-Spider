@@ -64,11 +64,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Poker\PMove.cpp" />
+    <ClCompile Include="Poker\Add13.cpp" />
+    <ClCompile Include="Poker\Action.cpp" />
+    <ClCompile Include="Poker\Card.cpp" />
+    <ClCompile Include="Poker\Deal.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Manager.cpp" />
     <ClCompile Include="Poker\Poker.cpp" />
+    <ClCompile Include="Poker\ReleaseCorner.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Poker\PMove.h" />
+    <ClInclude Include="Poker\Add13.h" />
+    <ClInclude Include="Poker\Action.h" />
+    <ClInclude Include="Poker\Card.h" />
+    <ClInclude Include="Poker\Deal.h" />
+    <ClInclude Include="Manager.h" />
     <ClInclude Include="Poker\Poker.h" />
+    <ClInclude Include="Poker\ReleaseCorner.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

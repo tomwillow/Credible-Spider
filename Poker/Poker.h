@@ -3,36 +3,12 @@
 #include <string>
 #include <vector>
 
-#include <iostream>
-class Card
-{
-public:
-	int suit;
-	int point;
-	bool show;
-	char getSuit() const
-	{
-		switch (suit)
-		{
-		case 1:return 'H';
-		case 2:return 'S';
-		case 3:return 'C';
-		case 4:return 'D';
-		default:
-			throw std::string("Error:'getSuit():' Undefined suit");
-		}
-	}
+#include "Card.h"
 
-	void print()inline const
-	{
-		std::cout << (show ? "" : "[") << getSuit() << point << (show ? "" : "]");
-	}
-};
-
-class Action
-{
-
-};
+#ifdef _DEBUG
+#include <assert.h>
+#define ISLEGAL(desk,deskNum,pos) assert((pos) >= 0);assert((deskNum)<(desk).size());assert((pos) < (desk)[(deskNum)].size());
+#endif
 
 class Poker
 {
@@ -49,39 +25,26 @@ class Poker
 	diamond 方块
 	*/
 private:
+
+	//返回对应堆叠能否回收
+	bool canRestore(int deskNum) const;
+
+
+public:
 	int seed;
 	int suitNum;
 	std::vector<std::vector<Card>> desk;//0为最里面
 	std::vector<std::vector<Card>> corner;//0为最里面
 	std::vector<std::vector<Card>> finished;
-public:
-	Poker(int suitNum) :suitNum(suitNum){}
-	std::vector<Card> genInitCard();
 
-	void printCard(const std::vector<Card> &cards);
+	void printCard(const std::vector<Card> &cards) const;
+	void printCard(const std::vector<std::vector<Card>> &vvcards) const;
+	void printCard(int deskNum, int pos) const;
+	void printCard() const;
 
-	void printCard(const std::vector<std::vector<Card>> &vvcards);
+	void refresh();
+	void Poker::refresh(int deskNum);
 
-	void printCard();
+	//void testCanMove() const;
 
-	void deal();
-
-	void deal(int seed);
-
-	bool releaseCorner()
-	{
-		if (corner.empty()) return false;
-		for (int i = 0; i < 10; ++i)
-		{
-			corner.back()[i].show = true;
-			desk[i].push_back(corner.back()[i]);
-		}
-		corner.pop_back();
-		return true;
-	}
-
-	bool canRestore(int deskNum)
-	{
-
-	}
 };

@@ -15,17 +15,17 @@ vector<Card> Deal::genInitCard() const
 	case 1:
 		for (int i = 0; i < 8; ++i)
 			for (int j = 1; j <= 13; ++j)
-				result.push_back({ 2, j });
+				result.push_back({ 4, j });//1个花色：黑桃
 		break;
 	case 2:
 		for (int i = 0; i < 8; ++i)
 			for (int j = 1; j <= 13; ++j)
-				result.push_back({ (i>3) ? 1 : 2, j });
+				result.push_back({ (i>3) ? 3 : 4, j });//2个花色：红桃，黑桃
 		break;
 	case 4:
 		for (int i = 0; i < 8; ++i)
 			for (int j = 1; j <= 13; ++j)
-				result.push_back({ i % 4 + 1, j });
+				result.push_back({ i % 4 + 1, j });//4个花色
 		break;
 	default:
 		throw string("Error:'genInitCard(" + to_string(suitNum) + ")");
@@ -84,6 +84,9 @@ void Deal::Do(Poker *poker)
 	//
 	for (auto &deskOne : poker->desk)
 		deskOne.back().show = true;
+
+	poker->score = 500;
+	poker->operation = 0;
 
 	success = true;
 }

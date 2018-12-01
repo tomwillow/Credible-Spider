@@ -25,6 +25,8 @@ void Poker::printCard(const vector<vector<Card>> &vvcards) const
 
 void Poker::printCard() const
 {
+	cout << "score:" << score << " operation:" << operation << endl;
+
 	for (size_t i = 0; i < desk.size(); ++i)
 	{
 		cout << "desk " << i << ":";
@@ -87,6 +89,8 @@ void Poker::refresh(int deskNum)
 {
 	if (canRestore(deskNum))
 	{
+		//进行回收
+
 		//加入套牌
 		vector<Card> temp(desk[deskNum].rbegin(), desk[deskNum].rbegin() + 13);
 		finished.push_back(temp);
@@ -97,6 +101,8 @@ void Poker::refresh(int deskNum)
 		//翻开下面的牌
 		if (!desk[deskNum].empty())
 			desk[deskNum].back().show = true;
+
+		score += 100;
 	}
 }
 
@@ -106,4 +112,10 @@ void Poker::refresh()
 	{
 		refresh(i);
 	}
+}
+
+
+bool Poker::isFinished()
+{
+	return finished.size() == 8;
 }

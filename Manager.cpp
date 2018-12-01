@@ -1,5 +1,10 @@
 #include "Manager.h"
 
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <tuple>
+
 #include "Poker\Add13.h"
 #include "Poker\Deal.h"
 #include "Poker\PMove.h"
@@ -26,42 +31,36 @@ void Manager::ReleaseRecord()
 	record.clear();
 }
 
-void Manager::testMove(Poker *poker)
+void Manager::testMove(Poker *poker,istream &in)
 {
 	int orig, start, dest;
-	cout << "--testMove--" << endl << "input orig, start, dest: "; cin >> orig >> start >> dest;
+	cout << "--testMove--" << endl << "input orig, start, dest: "; in >> orig >> start >> dest;
 	cout << endl;
 	cout << "Chose: "; poker->printCard(orig, start); cout << endl;
 	cout << "canMove? ";
 	Action *action = new PMove(orig, start, dest);
 	action->Do(poker);
-	cout << ((PMove *)action)->success;
+	cout << action->success;
 	cout << endl;
 
-	record.push_back(action);
+	if (action->success)
+		record.push_back(action);
 }
 
-void Manager::showHelpInfo() const
+void Manager::Command(const string command)
 {
-	cout << "--Command Line Help--" << endl;
-	cout << "a add13" << endl;
-	cout << "d deal with seed" << endl;
-	cout << "dr deal randomly" << endl;
-	cout << "h help" << endl;
-	cout << "m move" << endl;
-	cout << "p print" << endl;
-	cout << "r releaseCorner" << endl;
-	cout << "redo" << endl;
-	cout << "--Help End--" << endl << endl;
+	istringstream iss(command);
+	readIn(iss);
 }
 
-void Manager::test()
+void Manager::readIn(istream &in)
 {
 	showHelpInfo();
 	string command;
 	//cout << ">>";
-	while ((cout<<">>")&& (cin >> command))
+	while (in >> command)
 	{
+		cout << ">>";
 		if (command == "act")
 		{
 			Act();
@@ -70,7 +69,7 @@ void Manager::test()
 		if (command == "a")
 		{
 			int deskNum;
-			cout << "--add13--" << endl << "input deskNum: "; cin >> deskNum;
+			cout << "--add13--" << endl << "input deskNum: "; in >> deskNum;
 			cout << endl;
 			Action *action = new Add13(deskNum);
 			action->Do(poker);
@@ -84,7 +83,7 @@ void Manager::test()
 			ReleaseRecord();
 
 			int suitNum, seed;
-			cout << "--deal with seed--" << endl << "input suitNum, seed: "; cin >> suitNum >> seed;
+			cout << "--deal with seed--" << endl << "input suitNum, seed: "; in >> suitNum >> seed;
 			cout << endl;
 			Action *action = new Deal(suitNum, seed);
 			action->Do(poker);
@@ -98,7 +97,7 @@ void Manager::test()
 			ReleaseRecord();
 
 			int suitNum;
-			cout << "--deal randomly--" << endl << "input suitNum: "; cin >> suitNum;
+			cout << "--deal randomly--" << endl << "input suitNum: "; in >> suitNum;
 			cout << endl;
 			Action *action = new Deal(suitNum);
 			action->Do(poker);
@@ -116,7 +115,7 @@ void Manager::test()
 		}
 		if (command == "m")
 		{
-			testMove(poker);
+			testMove(poker,in);
 			//printCard();
 			poker->printCard();
 			continue;
@@ -149,6 +148,16 @@ void Manager::test()
 				cout << "Can't redo." << endl;
 			continue;
 		}
+		if (command == "s")
+		{
+			ofstream ofs("1.txt");
+			for (auto &action : record)
+			{
+				action->Output(ofs);
+			}
+			ofs.close();
+			continue;
+		}
 		if (command == "test")
 		{
 			vector<string> vs;
@@ -159,6 +168,31 @@ void Manager::test()
 		}
 
 		cout << "Unknowned Command" << endl;
+		throw "Error:Unknowned Command";
 		//cout << ">>";
 	}
+}
+
+void Manager::showHelpInfo() const
+{
+	cout << "--Command Line Help--" << endl;
+	cout << "a add13" << endl;
+	cout << "d deal with seed" << endl;
+	cout << "dr deal randomly" << endl;
+	cout << "h help" << endl;
+	cout << "m move" << endl;
+	cout << "p print" << endl;
+	cout << "r releaseCorner" << endl;
+	cout << "redo" << endl;
+	cout << "s save" << endl;
+	cout << "--Help End--" << endl << endl;
+}
+
+void Manager::autoSolve()
+{
+	if (poker->isFinished())
+		return;
+
+	vector<tuple<int, int, int>> moveList;
+
 }

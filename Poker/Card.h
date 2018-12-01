@@ -5,17 +5,17 @@
 class Card
 {
 public:
-	int suit;
+	int suit;//花色
 	int point;
 	bool show;
 	char getSuit() const
 	{
 		switch (suit)
 		{
-		case 1:return 'H';
-		case 2:return 'S';
-		case 3:return 'C';
-		case 4:return 'D';
+		case 1:return 'C';//梅花
+		case 2:return 'D';//方块
+		case 3:return 'H';//红桃
+		case 4:return 'S';//黑桃
 		default:
 			throw std::string("Error:'getSuit():' Undefined suit");
 		}

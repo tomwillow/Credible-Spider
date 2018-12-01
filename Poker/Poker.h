@@ -8,6 +8,8 @@
 #ifdef _DEBUG
 #include <assert.h>
 #define ISLEGAL(desk,deskNum,pos) assert((pos) >= 0);assert((deskNum)<(desk).size());assert((pos) < (desk)[(deskNum)].size());
+#else
+#define ISLEGAL(desk,deskNum,pos) ;
 #endif
 
 class Poker
@@ -33,6 +35,9 @@ private:
 public:
 	int seed;
 	int suitNum;
+	int score;
+	int operation;
+	bool isFinished();
 	std::vector<std::vector<Card>> desk;//0为最里面
 	std::vector<std::vector<Card>> corner;//0为最里面
 	std::vector<std::vector<Card>> finished;
@@ -44,6 +49,7 @@ public:
 
 	void refresh();
 	void Poker::refresh(int deskNum);
+
 
 	//void testCanMove() const;
 

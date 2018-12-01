@@ -36,6 +36,9 @@ bool PMove::Move(Poker *poker)
 		//²é¿´ÏûÅÆ
 		poker->refresh(destDesk);
 
+		poker->score--;
+		poker->operation++;
+
 		return true;
 	}
 	else

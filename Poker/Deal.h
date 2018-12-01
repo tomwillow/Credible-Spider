@@ -20,9 +20,10 @@ public:
 	{
 		using namespace std;
 		if (isRand)
-			return string("d ") + to_string(suitNum);
+			return string("dr ") + to_string(suitNum);
 		else
-			return string("dr ") + to_string(suitNum) + " " + to_string(seed);
+			return string("d ") + to_string(suitNum) + " " + to_string(seed);
 	}
+
 };
 

@@ -14,21 +14,17 @@ private:
 	TImage *imgCardBack;
 	TImage *imgCard[52];
 	std::vector<POINT> vecDesk;
-	std::vector<POINT> vecCardBack;
-	std::vector<std::pair<int,POINT>> vecCard;
+	//std::vector<POINT> vecCardBack;
+	std::vector<std::vector<std::pair<TImage *,POINT>>> vecCard;
 	std::vector<POINT> vecCorner;
+	std::pair<int, POINT> animateCard;
+
+	std::string textTipBox;
+	HBRUSH hBrushTipBox;
+	RECT rectTipBox;
 
 	bool bTimerDeal;
-	int timerDealDid1;
-	int timerDealDid2;
 
-	struct CardAnimate
-	{
-		bool show;
-		int index;
-		POINT pt;
-	};
-	std::queue<CardAnimate> qAnimate;
 public:
 	bool doubleBuffer;
 	DECLARE_WND_CLASS(_T("Credible Spider Window"))
@@ -55,6 +51,7 @@ public:
 	LRESULT MainWindow::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
+	void MainWindow::RefreshTipBoxText();
 	LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 };
 

@@ -9,11 +9,11 @@ TImage::TImage(HINSTANCE hInst,int Id)
 	cyBitmap = bitmap.bmHeight;
 
 	hdcMemImag = CreateCompatibleDC(NULL);
-	SelectObject(hdcMemImag, hBitmapImag);
 }
 
 void TImage::Draw(HDC hdc,int dest_x,int dest_y,int img_x,int img_y,DWORD rop)
 {
+	SelectObject(hdcMemImag, hBitmapImag);
 	BitBlt(hdc, dest_x,dest_y, cxBitmap, cyBitmap, hdcMemImag, img_x,img_y, rop);
 }
 

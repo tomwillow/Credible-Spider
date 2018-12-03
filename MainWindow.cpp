@@ -3,6 +3,7 @@
 #include "Dialog/DialogChooseLevel.h"
 extern Manager manager;
 
+using namespace std;
 
 void DrawTextAdvance(HDC hdc, const TCHAR text[], RECT *rect, long FontSize, int FontWeight, COLORREF color, const TCHAR FontName[], UINT format, int cEscapement=0, int cOrientation=0)
 {
@@ -54,6 +55,9 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 	PostMessage(WM_COMMAND, MAKELONG(ID_NEW_GAME, 0), 0);
 
+
+	hBrushTipBox = CreateSolidBrush(crTipBox);
+
 	cardEmpty = true;
 	return 0;
 }
@@ -79,6 +83,8 @@ LRESULT MainWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	delete imgCardBack;
 	for (auto &imgC : imgCard)
 		delete imgC;
+
+	DeleteObject(hBrushTipBox);
 	PostQuitMessage(0);
 	return 0;
 }
@@ -86,33 +92,6 @@ LRESULT MainWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 LRESULT MainWindow::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	WORD id = LOWORD(wParam);
-	switch (id)
-	{
-	case TIMER_DEAL:
-	{
-		if (timerDealDid1 < 10)
-		{
-
-			if (timerDealDid2 < 10)
-			{
-				timerDealDid2++;
-			}
-			else
-			{
-				timerDealDid1++;
-				timerDealDid2 = 0;
-			}
-		}
-		else
-		{
-			KillTimer(TIMER_DEAL);
-			bTimerDeal = false;
-			//ptAnimateCard.clear();
-		}
-		Invalidate();
-		break;
-	}
-	}
 	return 0;
 }
 
@@ -121,27 +100,23 @@ int GetIndexFromSuitPoint(int suit, int point)
 	return (suit - 1) * 13 + point - 1;
 }
 
+void MainWindow::RefreshTipBoxText()
+{
+	textTipBox = "分数：" + std::to_string(manager.poker->score) + "\r\n";
+	textTipBox += "操作：" + std::to_string(manager.poker->operation);
+}
+
 void MainWindow::Draw(HDC hdc, const RECT &rect)
 {
 	//Background
 	imgBackground->Fill(hdc, rect);
 
 	//TipBox
-	RECT rectTipBox;
-	rectTipBox.left = (rect.right - TIPBOX_WIDTH) / 2;
-	rectTipBox.right = rectTipBox.left + TIPBOX_WIDTH;
-	rectTipBox.bottom = rect.bottom - BORDER;
-	rectTipBox.top = rectTipBox.bottom - TIPBOX_HEIGHT;
 
-	HBRUSH hBrush = CreateSolidBrush(crTipBox);
-	SelectObject(hdc, hBrush);
+	SelectObject(hdc, hBrushTipBox);
 	Rectangle(hdc, rectTipBox.left, rectTipBox.top, rectTipBox.right, rectTipBox.bottom);
-	DeleteObject(hBrush);
 
-	std::string text;
-	text = "分数：" + std::to_string(manager.poker->score) + "\r\n";
-	text += "操作：" + std::to_string(manager.poker->operation);
-	DrawTextCenter(hdc, text.c_str(), rectTipBox, 12, 400, RGB(255,255,255), TEXT("宋体"), DT_LEFT);
+	DrawTextCenter(hdc, textTipBox.c_str(), rectTipBox, 12, 400, RGB(255, 255, 255), TEXT("宋体"), DT_LEFT);
 
 	//Card Empty
 	if (cardEmpty)
@@ -151,15 +126,26 @@ void MainWindow::Draw(HDC hdc, const RECT &rect)
 	}
 
 	//Draw desk
-	for (auto &pt : vecCardBack)
-		imgCardBack->Draw(hdc, pt.x, pt.y);
+	//for (auto &pt : vecCardBack)
+	//	imgCardBack->Draw(hdc, pt.x, pt.y);
 
-	for (auto &card : vecCard)
-		imgCard[card.first]->Draw(hdc, card.second.x, card.second.y);
+	//for (auto &card : vecCard)
+	//	imgCard[card.first]->Draw(hdc, card.second.x, card.second.y);
+
+	for (auto &vec : vecCard)
+	{
+		for (auto &card : vec)
+		{
+			card.first->Draw(hdc, card.second.x, card.second.y);
+		}
+	}
 
 	//Draw corner
 	for (auto &pt : vecCorner)
 		imgCardBack->Draw(hdc, pt.x, pt.y);
+
+	if (bTimerDeal)
+		imgCard[animateCard.first]->Draw(hdc, animateCard.second.x, animateCard.second.y);
 }
 
 LRESULT MainWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -194,9 +180,15 @@ LRESULT MainWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 
 LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	//Refresh Corner Card Coordinates
 	RECT rect;
 	GetClientRect(&rect);
+
+	rectTipBox.left = (rect.right - TIPBOX_WIDTH) / 2;
+	rectTipBox.right = rectTipBox.left + TIPBOX_WIDTH;
+	rectTipBox.bottom = rect.bottom - BORDER;
+	rectTipBox.top = rectTipBox.bottom - TIPBOX_HEIGHT;
+
+	//Refresh Corner Card Coordinates
 	vecCorner.resize(manager.poker->corner.size());
 	for (int i = 0; i < vecCorner.size(); ++i)
 	{
@@ -213,11 +205,13 @@ LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 		vecDesk[i].y = BORDER;
 	}
 
+	//Card
 	int col = 0;
-	vecCard.clear();
-	vecCardBack.clear();
+	//vecCard.clear();
+	//vecCardBack.clear();
 	for (auto &deskCards : manager.poker->desk)
 	{
+		std::vector < std::pair<TImage*, POINT>> temp;
 		int x = vecDesk[col].x;
 		int rol = 0;
 		for (auto &card : deskCards)
@@ -226,12 +220,17 @@ LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 			if (card.show)
 			{
 				int index = GetIndexFromSuitPoint(card.suit, card.point);
-				vecCard.push_back({ index, { x, y } });
+				temp.push_back({ imgCard[index], { x, y } });
+				//vecCard.push_back({ index,~bTimerDeal, { x, y } });
 			}
 			else
-				vecCardBack.push_back({ x, y });
+			{
+				temp.push_back({ imgCardBack, { x, y } });
+				//vecCardBack.push_back({ x, y });
+			}
 			rol++;
 		}
+		vecCard.push_back(temp);
 		col++;
 	}
 	return 0;
@@ -243,25 +242,55 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	int suit=dialogChooseLevel.DoModal();
 	if (suit != 0)
 	{
+		bTimerDeal = true;
+
 		manager.Command("dr " + std::to_string(suit));
 		cardEmpty = false;
-		SendMessage(WM_SIZE);
-		Invalidate();
 
-		int all_time = 3000;
-		int one_time = 3000 / 10;
-		int frame_time = one_time / 10;
-		for (int i = 0; i < 10; ++i)
+		vector<Card> temp;
+		for (auto &vec : manager.poker->desk)
 		{
-
-			//qAnimate.push({ cardindex[i], true, x, y });
+			if (!vec.empty())
+			{
+				temp.push_back(vec.back());
+				vec.pop_back();
+			}
 		}
-		//qAnimate.push()
 
-		SetTimer(TIMER_DEAL, 50);
-		timerDealDid1 = 0;
-		timerDealDid2 = 0;
-		bTimerDeal = true;
+		SendMessage(WM_SIZE);
+		RefreshTipBoxText();
+
+		Invalidate(true);
+		for (int i = 0; i < temp.size(); ++i)
+		{
+			int destX = vecCard[i].back().second.x;
+			int destY = vecCard[i].back().second.y+cardGapH;
+			int origX = vecCorner.back().x - BORDER;
+			int origY = vecCorner.back().y;
+			Card card = temp[i];
+			for (int f = 0; f < 30; ++f)
+			{
+				int x = (destX - origX)*f / 30 + origX;
+				int y = (destY - origY)*f / 30 + origY;
+				int index = GetIndexFromSuitPoint(card.suit, card.point);
+				animateCard = { index, { x, y } };
+				BOOL b;
+				//OnPaint(WM_PAINT, 0, 0, b);
+				HDC hdc = GetDC();
+				RECT rect;
+				GetClientRect(&rect);
+				Draw(hdc, rect);
+				ReleaseDC(hdc);
+				//Invalidate(true);
+			}
+			manager.poker->desk[i].push_back(card);
+			SendMessage(WM_SIZE);
+		}
+
+		bTimerDeal = false;
+
+		Invalidate(false);
+
 	}
 
 	return 0;

@@ -59,14 +59,20 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ACommand.cpp" />
+    <ClCompile Include="AModifyVecData.cpp" />
+    <ClCompile Include="ASetCard.cpp" />
+    <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="CardDrawer.cpp" />
     <ClCompile Include="Dialog\DialogChooseLevel.cpp" />
+    <ClCompile Include="ADrawCard.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Poker\PMove.cpp" />
@@ -81,7 +87,13 @@
     <ClCompile Include="TImage.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ACommand.h" />
+    <ClInclude Include="AModifyVecData.h" />
+    <ClInclude Include="ASetCard.h" />
+    <ClInclude Include="Animation.h" />
+    <ClInclude Include="CardDrawer.h" />
     <ClInclude Include="Dialog\DialogChooseLevel.h" />
+    <ClInclude Include="ADrawCard.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="MainWindow.h" />
@@ -162,6 +174,14 @@
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="Resource\xp.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Resource\deal.wav" />
+    <Media Include="Resource\no_tip.wav" />
+    <Media Include="Resource\pickup.wav" />
+    <Media Include="Resource\putdown.wav" />
+    <Media Include="Resource\success.wav" />
+    <Media Include="Resource\tip.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

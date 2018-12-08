@@ -54,6 +54,24 @@
     <ClCompile Include="Dialog\DialogChooseLevel.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Animation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ADrawCard.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CardDrawer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ASetCard.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AModifyVecData.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ACommand.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
@@ -93,6 +111,24 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Dialog\DialogChooseLevel.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ADrawCard.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CardDrawer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ASetCard.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AModifyVecData.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ACommand.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -285,5 +321,25 @@
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="Resource\xp.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Resource\deal.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="Resource\no_tip.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="Resource\pickup.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="Resource\putdown.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="Resource\success.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="Resource\tip.wav">
+      <Filter>资源文件</Filter>
+    </Media>
   </ItemGroup>
 </Project>

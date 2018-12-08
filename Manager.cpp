@@ -14,13 +14,15 @@ using namespace std;
 
 Manager::Manager()
 {
-	poker = new Poker;
+	poker = NULL;
+	pCmdFunc = NULL;
 }
 
 
 Manager::~Manager()
 {
-	delete poker;
+	if (poker!=NULL)
+		delete poker;
 	ReleaseRecord();
 }
 
@@ -31,33 +33,58 @@ void Manager::ReleaseRecord()
 	record.clear();
 }
 
-void Manager::testMove(Poker *poker,istream &in)
+bool Manager::canPick(Poker *poker, istream &in)
+{
+	int orig, start;
+	cout << "--canPick--" << endl << "input orig, start, dest: "; in >> orig >> start;
+	cout << endl;
+	cout << "Chose: "; poker->printCard(orig, start); cout << endl;
+	cout << "canPick? ";
+	Action *action = new PMove(orig, start);
+	if (action->Do(poker))
+	{
+		cout << "Can." << endl;
+		return true;
+	}
+	else
+	{
+		cout << "Can't." << endl;
+		return false;
+	}
+}
+bool Manager::move(Poker *poker, istream &in)
 {
 	int orig, start, dest;
-	cout << "--testMove--" << endl << "input orig, start, dest: "; in >> orig >> start >> dest;
+	cout << "--move--" << endl << "input orig, start, dest: "; in >> orig >> start >> dest;
 	cout << endl;
 	cout << "Chose: "; poker->printCard(orig, start); cout << endl;
 	cout << "canMove? ";
 	Action *action = new PMove(orig, start, dest);
-	action->Do(poker);
-	cout << action->success;
-	cout << endl;
-
-	if (action->success)
+	if (action->Do(poker))
+	{
+		cout << "success." << endl;
 		record.push_back(action);
+		return true;
+	}
+	else
+	{
+		cout << "failed." << endl;
+		return false;
+	}
 }
 
-void Manager::Command(const string command)
+bool Manager::Command(const string command)
 {
 	istringstream iss(command);
-	readIn(iss);
+	return readIn(iss);
 }
 
-void Manager::readIn(istream &in)
+bool Manager::readIn(istream &in)
 {
 	showHelpInfo();
 	string command;
 	//cout << ">>";
+	bool success=true;
 	while (in >> command)
 	{
 		cout << ">>";
@@ -82,6 +109,9 @@ void Manager::readIn(istream &in)
 		{
 			ReleaseRecord();
 
+			if (poker) delete poker;
+			poker = new Poker;
+
 			int suitNum, seed;
 			cout << "--deal with seed--" << endl << "input suitNum, seed: "; in >> suitNum >> seed;
 			cout << endl;
@@ -95,6 +125,9 @@ void Manager::readIn(istream &in)
 		if (command == "dr")
 		{
 			ReleaseRecord();
+			
+			if (poker) delete poker;
+			poker = new Poker;
 
 			int suitNum;
 			cout << "--deal randomly--" << endl << "input suitNum: "; in >> suitNum;
@@ -115,9 +148,14 @@ void Manager::readIn(istream &in)
 		}
 		if (command == "m")
 		{
-			testMove(poker,in);
-			//printCard();
+			success=move(poker,in);
+
 			poker->printCard();
+			continue;
+		}
+		if (command == "pick")
+		{
+			success = canPick(poker, in);
 			continue;
 		}
 		if (command == "p")
@@ -143,6 +181,7 @@ void Manager::readIn(istream &in)
 				delete record.back();
 				record.pop_back();
 				Act();
+				success = true;
 			}
 			else
 				cout << "Can't redo." << endl;
@@ -171,6 +210,9 @@ void Manager::readIn(istream &in)
 		throw "Error:Unknowned Command";
 		//cout << ">>";
 	}
+	if (pCmdFunc!=NULL)
+		pCmdFunc();
+	return success;
 }
 
 void Manager::showHelpInfo() const
@@ -195,4 +237,19 @@ void Manager::autoSolve()
 
 	vector<tuple<int, int, int>> moveList;
 
+}
+
+bool Manager::canRedo()
+{
+	return record.size() > 1;
+}
+
+
+
+Action* Manager::GetLastAct()
+{
+	if (record.empty())
+		return NULL;
+	else
+		return record.back();
 }

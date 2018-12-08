@@ -9,7 +9,7 @@ private:
 public:
 	ReleaseCorner();
 	~ReleaseCorner();
-	void Do(Poker *poker);
+	bool Do(Poker *poker);
 	std::string GetCommand()
 	{
 		return std::string("r");

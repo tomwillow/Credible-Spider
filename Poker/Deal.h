@@ -15,7 +15,7 @@ public:
 	void set(bool isRand){ this->isRand = isRand; }
 	Deal(int suitNum) :suitNum(suitNum), isRand(true){}
 	Deal(int suitNum, int seed) :suitNum(suitNum), seed(seed), isRand(false){}
-	void Do(Poker *poker);
+	bool Do(Poker *poker);
 	std::string GetCommand()
 	{
 		using namespace std;

@@ -45,7 +45,10 @@ bool PMove::Move(Poker *poker)
 		return false;
 }
 
-void PMove::Do(Poker *poker)
+bool PMove::Do(Poker *poker)
 {
-	success = Move(poker);
+	if (bMoveMode)
+		return Move(poker);
+	else
+		return canMove(poker, origDesk, start);
 }

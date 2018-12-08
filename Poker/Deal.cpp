@@ -33,7 +33,7 @@ vector<Card> Deal::genInitCard() const
 	return result;
 }
 
-void Deal::Do(Poker *poker)
+bool Deal::Do(Poker *poker)
 {
 	if (isRand)
 		seed = GetTickCount();
@@ -88,5 +88,5 @@ void Deal::Do(Poker *poker)
 	poker->score = 500;
 	poker->operation = 0;
 
-	success = true;
+	return true;
 }

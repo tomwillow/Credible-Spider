@@ -4,7 +4,6 @@
 
 ReleaseCorner::ReleaseCorner() 
 {
-	success = false;
 }
 
 
@@ -33,7 +32,7 @@ bool ReleaseCorner::releaseCorner(Poker *poker)
 }
 
 //释放一摞右下角，没有检查收牌情况
-void ReleaseCorner::Do(Poker *poker)
+bool ReleaseCorner::Do(Poker *poker)
 {
-	success = releaseCorner(poker);
+	return releaseCorner(poker);
 }

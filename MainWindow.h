@@ -1,32 +1,39 @@
 #pragma once
 #include "stdafx.h"
 #include "TImage.h"
+#include "Animation.h"
 
 #define TIMER_DEAL 1
-#define TIMER_DEAL_ELPS 50
+#define TIMER_DEAL_ELPS 10
 
 class MainWindow :public CWindowImpl<MainWindow, CWindow, CFrameWinTraits>
 {
 private:
+	static std::string textTipBox;
+
 	bool cardEmpty;
 	TImage *imgBackground;
 	TImage *imgCardEmpty;
 	TImage *imgCardBack;
 	TImage *imgCard[52];
-	std::vector<POINT> vecDesk;
-	//std::vector<POINT> vecCardBack;
-	std::vector<std::vector<std::pair<TImage *,POINT>>> vecCard;
-	std::vector<POINT> vecCorner;
-	std::pair<int, POINT> animateCard;
+	std::vector<POINT> vecDesk;//∂—µ˛Œª÷√
 
-	std::string textTipBox;
+	std::vector<std::vector<CardDrawer>> vecCard;//ªÊ÷∆≈∆
+	static std::vector<POINT> vecCorner;
+
 	HBRUSH hBrushTipBox;
 	RECT rectTipBox;
 
-	bool bTimerDeal;
+	bool bOnAnimation;
 
+	std::queue<Animation *> qAnimation;
+
+	bool bOnDrag;
+	std::vector<std::pair<CardDrawer *,POINT>> dragCard;
+	POINT ptDragStart, ptChange;
 public:
 	bool doubleBuffer;
+	static HWND s_hWnd;
 	DECLARE_WND_CLASS(_T("Credible Spider Window"))
 
 	BEGIN_MSG_MAP(MainWindow)
@@ -36,7 +43,13 @@ public:
 		MESSAGE_HANDLER(WM_PAINT, OnPaint)
 		MESSAGE_HANDLER(WM_TIMER, OnTimer)
 		MESSAGE_HANDLER(WM_SIZE, OnSize)
+		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+		MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
 		COMMAND_ID_HANDLER(ID_NEW_GAME, OnNewGame)
+		COMMAND_ID_HANDLER(ID_RENEW_GAME, OnReNewGame)
+		COMMAND_ID_HANDLER(ID_DEAL, OnDeal)
+		COMMAND_ID_HANDLER(ID_REDO, OnRedo)
 	END_MSG_MAP()
 
 	LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -50,8 +63,22 @@ public:
 	LRESULT MainWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT MainWindow::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT MainWindow::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT MainWindow::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT MainWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
-	void MainWindow::RefreshTipBoxText();
+	bool MainWindow::GetPtOnCard(POINT ptMouse, int &col, int &row);
+	bool MainWindow::PtInCard(POINT ptMouse,POINT ptCard);
+
+	void MainWindow::AddDealAnimation();
+	void MainWindow::RedoDealAnimation();
+
+	static void MainWindow::RefreshByManager();
+	void MainWindow::RefreshCard();
+
+	void MainWindow::NewGame();
 	LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT MainWindow::OnDeal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT MainWindow::OnRedo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 };
-

@@ -33,10 +33,10 @@ private:
 
 
 public:
-	int seed;
-	int suitNum;
-	int score;
-	int operation;
+	int seed;//种子
+	int suitNum;//花色
+	int score;//分数
+	int operation;//操作次数
 	bool isFinished();
 	std::vector<std::vector<Card>> desk;//0为最里面
 	std::vector<std::vector<Card>> corner;//0为最里面

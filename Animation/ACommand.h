@@ -1,5 +1,6 @@
 #pragma once
 #include "Animation.h"
+#include <string>
 
 class Manager;
 class ACommand :public Animation

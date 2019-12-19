@@ -21,9 +21,6 @@
     <ClCompile Include="Poker\Poker.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Manager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Poker\Card.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -54,30 +51,33 @@
     <ClCompile Include="Dialog\DialogChooseLevel.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Animation.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ADrawCard.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="CardDrawer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ASetCard.cpp">
+    <ClCompile Include="Animation\ACommand.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="AModifyVecData.cpp">
+    <ClCompile Include="Animation\ADrawCard.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ACommand.cpp">
+    <ClCompile Include="Animation\AModifyVecData.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation\Animation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation\ASetCard.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Poker\Manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Poker\Restore.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Manager.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Poker\Card.h">
@@ -113,22 +113,28 @@
     <ClInclude Include="Dialog\DialogChooseLevel.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Animation.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ADrawCard.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="CardDrawer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ASetCard.h">
+    <ClInclude Include="Animation\ASetCard.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="AModifyVecData.h">
+    <ClInclude Include="Animation\ACommand.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ACommand.h">
+    <ClInclude Include="Animation\ADrawCard.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\AModifyVecData.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\Animation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Poker\Manager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Poker\Restore.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

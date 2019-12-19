@@ -18,13 +18,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -66,13 +66,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ACommand.cpp" />
-    <ClCompile Include="AModifyVecData.cpp" />
-    <ClCompile Include="ASetCard.cpp" />
-    <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="Animation\ACommand.cpp" />
+    <ClCompile Include="Animation\AModifyVecData.cpp" />
+    <ClCompile Include="Animation\ASetCard.cpp" />
+    <ClCompile Include="Animation\Animation.cpp" />
     <ClCompile Include="CardDrawer.cpp" />
     <ClCompile Include="Dialog\DialogChooseLevel.cpp" />
-    <ClCompile Include="ADrawCard.cpp" />
+    <ClCompile Include="Animation\ADrawCard.cpp" />
+    <ClCompile Include="Poker\Restore.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Poker\PMove.cpp" />
@@ -81,19 +82,20 @@
     <ClCompile Include="Poker\Card.cpp" />
     <ClCompile Include="Poker\Deal.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Manager.cpp" />
+    <ClCompile Include="Poker\Manager.cpp" />
     <ClCompile Include="Poker\Poker.cpp" />
     <ClCompile Include="Poker\ReleaseCorner.cpp" />
     <ClCompile Include="TImage.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ACommand.h" />
-    <ClInclude Include="AModifyVecData.h" />
-    <ClInclude Include="ASetCard.h" />
-    <ClInclude Include="Animation.h" />
+    <ClInclude Include="Animation\ACommand.h" />
+    <ClInclude Include="Animation\AModifyVecData.h" />
+    <ClInclude Include="Animation\ASetCard.h" />
+    <ClInclude Include="Animation\Animation.h" />
     <ClInclude Include="CardDrawer.h" />
     <ClInclude Include="Dialog\DialogChooseLevel.h" />
-    <ClInclude Include="ADrawCard.h" />
+    <ClInclude Include="Animation\ADrawCard.h" />
+    <ClInclude Include="Poker\Restore.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="MainWindow.h" />
@@ -102,7 +104,7 @@
     <ClInclude Include="Poker\Action.h" />
     <ClInclude Include="Poker\Card.h" />
     <ClInclude Include="Poker\Deal.h" />
-    <ClInclude Include="Manager.h" />
+    <ClInclude Include="Poker\Manager.h" />
     <ClInclude Include="Poker\Poker.h" />
     <ClInclude Include="Poker\ReleaseCorner.h" />
     <ClInclude Include="TImage.h" />

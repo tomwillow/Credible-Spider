@@ -2,17 +2,21 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 class Poker;
 class Action
 {
-private:
+protected:
+	Poker* poker;
 public:
-	std::string strid;
-	virtual bool Do(Poker *poker) = 0;
-	virtual std::string GetCommand() = 0;
-	virtual std::ostream& Output(std::ostream& out)
-	{
-		return out << GetCommand() << std::endl;
-	}
+	Action():poker(nullptr) {}
+	virtual ~Action() {}
+	virtual bool Do(Poker* inpoker) = 0;
+	virtual bool Redo(Poker* inpoker) = 0;
+	virtual std::string GetCommand() const = 0;
+
+	friend std::ostream& operator<<(std::ostream& out, const Action& action);
 };
+
+std::ostream& operator<<(std::ostream& out, const Action& action);

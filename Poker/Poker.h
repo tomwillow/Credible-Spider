@@ -2,15 +2,12 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include "Card.h"
 
-#ifdef _DEBUG
-#include <assert.h>
-#define ISLEGAL(desk,deskNum,pos) assert((pos) >= 0);assert((deskNum)<(desk).size());assert((pos) < (desk)[(deskNum)].size());
-#else
-#define ISLEGAL(desk,deskNum,pos) ;
-#endif
+//#include <assert.h>
+//#define ISLEGAL(desk,deskIndex,num) assert((deskIndex)>0 && (deskIndex)<(desk).size());assert((num) > 0 && (num)<=(desk)[deskIndex].size());
 
 class Poker
 {
@@ -26,31 +23,42 @@ class Poker
 	club 梅花
 	diamond 方块
 	*/
-private:
-
-	//返回对应堆叠能否回收
-	bool canRestore(int deskNum) const;
-
-
 public:
+
 	int seed;//种子
 	int suitNum;//花色
 	int score;//分数
 	int operation;//操作次数
+
+	//通过检测 已完成==8 返回是否已完成
 	bool isFinished();
+
+	//桌上套牌
 	std::vector<std::vector<Card>> desk;//0为最里面
+
+	//发牌区
 	std::vector<std::vector<Card>> corner;//0为最里面
+
+	//已完成套牌
 	std::vector<std::vector<Card>> finished;
+
+	int GetValue() const;
 
 	void printCard(const std::vector<Card> &cards) const;
 	void printCard(const std::vector<std::vector<Card>> &vvcards) const;
-	void printCard(int deskNum, int pos) const;
-	void printCard() const;
+	void printCard(int deskIndex, int num) const;
 
-	void refresh();
-	void Poker::refresh(int deskNum);
-
-
-	//void testCanMove() const;
-
+	friend bool operator==(const Poker& lhs, const Poker& rhs);
+	friend std::ostream& operator<<(std::ostream& out, const Poker& poker);
 };
+
+std::ostream& operator<<(std::ostream& out, const Poker& poker);
+bool operator==(const Poker& lhs, const Poker& rhs);
+
+namespace std
+{
+	template<> struct hash<Poker>
+	{
+		size_t operator()(const Poker& poker) const;
+	};
+}

@@ -5,9 +5,14 @@
 class Card
 {
 public:
-	int suit;//花色
-	int point;
-	bool show;
+
+	int suit;//花色 1 2 3 4
+
+	int point;//点数 1-13
+
+	bool show;//是否已翻开
+
+	//返回花色 C D H S
 	char getSuit() const
 	{
 		switch (suit)
@@ -21,8 +26,11 @@ public:
 		}
 	}
 
-	void print()inline const
-	{
-		std::cout << (show ? "" : "[") << getSuit() << point << (show ? "" : "]");
-	}
+	//打印牌
+	//eg. [S1]
+	friend std::ostream& operator<<(std::ostream& out, const Card& card);
 };
+
+bool operator==(const Card& lhs, const Card& rhs);
+
+std::ostream& operator<<(std::ostream& out, const Card& card);

@@ -1,5 +1,6 @@
 #pragma once
 #include <istream>
+#include <memory>
 #include <unordered_set>
 
 #include "Poker.h"
@@ -8,7 +9,7 @@ class Manager
 {
 private:
 	Poker *poker;
-	std::vector<Action *> record;
+	std::vector<std::shared_ptr<Action>> record;
 
 	void showHelpInfo() const;
 	bool Move(Poker *poker, std::istream &in);
@@ -20,12 +21,12 @@ public:
 	~Manager();
 
 	const Poker* GetPoker(){ return poker; }
-	bool canRedo();
-	Action* GetLastAct();
+	bool CanRedo();
 	bool Command(const std::string cmd);
 	bool readIn(std::istream &in);
 
-	void autoSolve();
+	bool AutoSolve();
 };
 
-bool dfs(Poker* poker, std::vector<Action*> record, std::unordered_set<Poker>& states);
+
+bool dfs(Poker& result, bool& success, int& calc, std::shared_ptr<Poker> poker, std::vector<std::shared_ptr<Action>>& record, std::unordered_set<Poker>& states, int stackLimited, int calcLimited);

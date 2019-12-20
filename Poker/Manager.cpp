@@ -5,6 +5,7 @@
 #include <sstream>
 #include <tuple>
 #include <algorithm>
+#include <memory>
 #include <unordered_set>
 
 #include "Add13.h"
@@ -12,6 +13,8 @@
 #include "PMove.h"
 #include "ReleaseCorner.h"
 #include "Restore.h"
+
+//#define _PRINT
 
 using namespace std;
 
@@ -43,8 +46,6 @@ Manager::~Manager()
 
 void Manager::ReleaseRecord()
 {
-	for (auto& r : record)
-		delete r;
 	record.clear();
 }
 
@@ -75,7 +76,7 @@ bool Manager::Move(Poker* poker, istream& in)
 	cout << "Chose: "; poker->printCard(orig, num);
 	cout << endl;
 	cout << "canMove? ";
-	Action* action = new PMove(orig, dest, num);
+	shared_ptr<Action> action ( new PMove(orig, dest, num));
 	if (action->Do(poker))
 	{
 		record.push_back(action);
@@ -84,7 +85,6 @@ bool Manager::Move(Poker* poker, istream& in)
 	}
 	else
 	{
-		delete action;
 		cout << "failed." << endl;
 		return false;
 	}
@@ -108,22 +108,21 @@ bool Manager::readIn(istream& in)
 			break;
 		if (command == "auto")
 		{
-			autoSolve();
-			continue;
+			AutoSolve();
+			break;
+			//continue;
 		}
 		if (command == "a")
 		{
 			int deskNum;
 			cout << "--add13--" << endl << "input deskNum: "; in >> deskNum;
 			cout << endl;
-			Action* action = new Add13(deskNum);
+			shared_ptr<Action> action(new Add13(deskNum));
 			if (action->Do(poker))
 			{
 				record.push_back(action);
 				cout << *poker;
 			}
-			else
-				delete action;
 			continue;
 		}
 		if (command == "h")
@@ -150,14 +149,12 @@ bool Manager::readIn(istream& in)
 		}
 		if (command == "r")
 		{
-			Action* action = new ReleaseCorner();
+			shared_ptr<Action> action ( new ReleaseCorner());
 			if (action->Do(poker))
 			{
 				record.push_back(action);
 				cout << *poker;
 			}
-			else
-				delete action;
 			continue;
 		}
 		if (command == "redo")
@@ -165,7 +162,6 @@ bool Manager::readIn(istream& in)
 			if (record.size() > 0)
 			{
 				record.back()->Redo(poker);
-				delete record.back();
 				record.pop_back();
 				success = true;
 
@@ -220,28 +216,32 @@ void Manager::showHelpInfo() const
 	cout << "--Help End--" << endl << endl;
 }
 
-bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
+bool dfs(Poker &result,bool &success,int &calc,shared_ptr<Poker> poker,vector<shared_ptr<Action>> &record, unordered_set<Poker>& states,int stackLimited,int calcLimited)
 {
 	if (poker->isFinished())
+	{
+		result = *poker;
+		success = true;
+		return true;
+	}
+
+	if (poker->operation >= stackLimited || calc>=calcLimited)
 	{
 		return true;
 	}
 
+	calc++;
+
 	struct Node
 	{
 		int value;
-		Poker* poker;
-		Action* action;
+		shared_ptr<Poker> poker;
+		shared_ptr<Action> action;
 	};
 	vector<Node> actions;
 
 	auto ReleaseActions = [](vector<Node> &actions)
 	{
-		for (auto& node : actions)
-		{
-			delete node.poker;
-			delete node.action;
-		}
 		actions.clear();
 	};
 
@@ -261,6 +261,8 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 				if (cards.empty())
 					continue;
 
+				//得到可移动牌数量
+				//至少会返回1
 				int num = 1;
 				while (1)
 				{
@@ -269,7 +271,7 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 						num--;
 						break;
 					}
-					if (::CanPick(poker, orig, num))
+					if (::CanPick(poker.get(), orig, num))
 					{
 						num++;
 					}
@@ -280,18 +282,17 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 					}
 				}
 
+				//全部移到空位没有意义
+				if (num == cards.size())
+					continue;
+
 				//
-				Poker* newPoker = new Poker(*poker);
-				Action* action = new PMove(orig, dest, num);
-				action->Do(newPoker);
+				shared_ptr<Poker> newPoker(new Poker(*poker.get()));
+				shared_ptr<Action> action(new PMove(orig, dest, num));
+				action->Do(newPoker.get());
 
 				if (states.find(*newPoker) == states.end())
 					actions.push_back({ newPoker->GetValue(),newPoker,action });
-				else
-				{
-					delete newPoker;
-					delete action;
-				}
 			}
 		}
 		else//dest牌堆非空
@@ -333,17 +334,12 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 					//不考虑花色，花色留给估值函数计算
 					if (it->point + 1 == pCard->point)//it->suit == pCard->suit && 
 					{
-						Poker* tempPoker = new Poker(*poker);
-						Action* action = new PMove(orig, dest, num);
-						action->Do(tempPoker);
+						shared_ptr<Poker> tempPoker(new Poker(*poker.get()));
+						shared_ptr<Action> action( new PMove(orig, dest, num));
+						action->Do(tempPoker.get());
 
 						if (states.find(*tempPoker) == states.end())
 							actions.push_back({ tempPoker->GetValue(),tempPoker,action });
-						else
-						{
-							delete tempPoker;
-							delete action;
-						}
 						break;
 					}
 
@@ -356,15 +352,15 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 	//加入发牌操作
 	if (!poker->corner.empty())
 	{
-		Poker* newPoker = new Poker(*poker);
-		Action* action = new ReleaseCorner();
-		action->Do(newPoker);
-		actions.push_back({ newPoker->GetValue(),newPoker,action });
+		shared_ptr<Poker> newPoker(new Poker(*poker.get()));
+		shared_ptr<Action> action(new ReleaseCorner());
+		action->Do(newPoker.get());
+		actions.push_back({ poker->GetValue()-100,newPoker,action });
 	}
 
 	//没有空位
 	if (emptyIndex.empty())
-		//去掉会减分的移牌
+		//去掉比当前评分还低的移牌
 		for (auto it = actions.begin(); it != actions.end();)
 		{
 			if (typeid(*it->action) == typeid(PMove) && it->value <= poker->GetValue())
@@ -377,7 +373,7 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 	else
 	{
 		//有空位
-		//如果待发区还有牌
+		//如果待发区还有牌，则移牌到空位补空，因为有空位不能发牌
 		if (!poker->corner.empty())
 		{
 			//如果全是顺牌，则找一张最小的移过去
@@ -396,9 +392,11 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 
 			if (AllIsOrdered)
 			{
+				//清空当前所有操作
 				ReleaseActions(actions);
 				int orig = 0;
 				int minPoint = 14;
+				//寻找最小的牌
 				for (int i = 0; i < poker->desk.size(); ++i)
 				{
 					auto& cards = poker->desk[i];
@@ -409,24 +407,29 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 					}
 				}
 
-				Action* action = new PMove(orig, emptyIndex.front(), 1);
-				Poker* newPoker = new Poker(*poker);
-				action->Do(newPoker);
+				//只添加一个移牌补空位的操作
+				shared_ptr<Action> action(new PMove(orig, emptyIndex.front(), 1));
+				shared_ptr<Poker> newPoker(new Poker(*poker.get()));
+				action->Do(newPoker.get());
 				actions.push_back({ newPoker->GetValue(),newPoker,action });
 			}
 		}
 	}
 
-	//sort
+	//按照评估分大到小排序
 	sort(actions.begin(), actions.end(), [](const Node& n1, const Node& n2) {return n1.value > n2.value; });
 
-	static int round = 0;
+	static int round = -1;
 
 	//开始递归
 	for (auto it=actions.begin();it!=actions.end();)
 	{
 		auto& node = *it;
 
+#ifdef _PRINT
+		cout << *poker;
+
+		//可以的操作
 		cout << "Action:" << endl;
 		for (auto it2=it;it2!=actions.end();++it2)
 			cout << *it2->action << " value:" << it2->value << endl;
@@ -434,21 +437,23 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 		//显示操作
 		cout << string(20, '-');
 		cout << "Do:" << *node.action << endl;
+#endif
 
-		if (poker->operation < round)
-		{
-			;
-		}
-		else
-		{
-			string s;
-			getline(cin, s);
-			if (s.empty())
-				round = 0;
-			else
-				round = stoi(s);
-			//system("pause");
-		}
+		//此处暂停
+		//按任意键则走一步，输入数字则直到stack==round才停下
+		//if (poker->operation < round)
+		//{
+		//	;
+		//}
+		//else
+		//{
+		//	string s;
+		//	getline(cin, s);
+		//	if (s.empty())
+		//		round = -1;
+		//	else
+		//		round = stoi(s);
+		//}
 
 		//没出现过的状态
 		if (states.find(*node.poker) == states.end())
@@ -456,32 +461,28 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 			//加入状态
 			states.insert(*node.poker);
 
-			cout << *node.poker;
-
+			//push记录
 			record.push_back(node.action);
 
-			if (dfs(node.poker,record, states))
+			if (dfs(result,success,calc,node.poker,record, states,stackLimited,calcLimited))
 			{
+				//只有终止才会返回true，如果任意位置返回true，此处将逐级终止递归
 				ReleaseActions(actions);
 				return true;
 			}
 
+			//pop记录
 			record.pop_back();
-
-			delete node.poker;
-			delete node.action;
 
 			it++;
 		}
 		else//已出现过的状态
 		{
-			delete node.poker;
-			delete node.action;
-
+#ifdef _PRINT
 			cout << string(20, '-');
 			cout << "No-movement:" << endl;
-			//cout << *poker;
-
+#endif
+			//直接转到下一个操作
 			it = actions.erase(it);
 		}
 	}
@@ -490,28 +491,51 @@ bool dfs(Poker* poker,vector<Action*> record, unordered_set<Poker>& states)
 	return false;
 }
 
-void Manager::autoSolve()
+bool Manager::AutoSolve()
 {
 	unordered_set<Poker> states;
+	bool success = false;
+	int calc = 0;
 
-	dfs(poker,record, states);
+	//1花色时，200可以解出70/100个；500可以解出89/100个；1000可以解出92/100个；8000可以解出98/100个
+	//2花色时，2000可以解出23/100个；8000可以解出32/100个
+	//4花色时，100000解出0/6个
+	int calcLimited = 200;
 
-	cout << "Finished. Step = " << record.size() << endl;
-	for (int i = 0; i < record.size(); ++i)
-		cout << "[" << i << "] " << *record[i] << endl;
+	//480时栈溢出，所以必须小于480。不建议提高保留栈大小
+	int stackLimited = 400;
+
+	//因为传入的poker是智能指针，会被释放
+	//所以新建一个Poker保存完成状态
+	//未完成的话Poker是空的，因为dfs只有true才写入result
+	Poker* result = new Poker;
+	dfs(*result,success,calc,shared_ptr<Poker>(poker),record, states,stackLimited,calcLimited);
+
+	poker = result;
+
+	//输出计算量
+	cout << "Calculation:" << calc << endl;
+
+	if (success == true)
+	{
+		//输出步骤
+		cout << "Finished. Step = " << record.size() << endl;
+		for (int i = 0; i < record.size(); ++i)
+			cout << "[" << i << "] " << *record[i] << endl;
+	}
+	else
+	{
+		//输出失败原因
+		if (calc >= calcLimited)
+			cout << "Calculation number >= " << calcLimited << endl;
+		else
+			cout << "Call-stack depth >= " << stackLimited << endl;
+		cout << "Fail." << endl;
+	}
+	return success;
 }
 
-bool Manager::canRedo()
+bool Manager::CanRedo()
 {
 	return record.size() > 1;
-}
-
-
-
-Action* Manager::GetLastAct()
-{
-	if (record.empty())
-		return NULL;
-	else
-		return record.back();
 }

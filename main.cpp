@@ -1,17 +1,8 @@
 #include "stdafx.h"
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-
-#include "Poker/Poker.h"
-#include "Manager.h"
-
 #include "MainWindow.h"
 
 CComModule _Module;
-
-Manager manager;
 
 using namespace std;
 
@@ -42,15 +33,3 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hInstPrev,
 	_Module.Term();
 	return msg.wParam;
 }
-
-//int main()
-//{
-//
-//	Manager manager;
-//	//manager.readIn(cin);
-//	manager.readIn(ifstream("1.txt"));
-//
-//
-//	system("pause");
-//	return 0;
-//}

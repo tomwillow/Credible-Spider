@@ -34,6 +34,7 @@ bool ReleaseCorner::Do(Poker* inpoker)
 	poker->corner.pop_back();
 	success = true;
 
+	poker->score--;
 	poker->operation++;
 
 	//刷新看能否回收

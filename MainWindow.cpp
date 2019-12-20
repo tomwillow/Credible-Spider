@@ -7,8 +7,6 @@
 #include "AModifyVecData.h"
 #pragma comment(lib,"winmm.lib")
 
-extern Manager manager;
-
 using namespace std;
 
 HWND MainWindow::s_hWnd = NULL;
@@ -73,7 +71,7 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 	bOnDrag = false;
 
-	manager.pCmdFunc = &RefreshByManager;
+	//manager.pCmdFunc = &RefreshByManager;
 
 	s_hWnd = m_hWnd;
 
@@ -217,7 +215,7 @@ void MainWindow::RefreshCard()
 	//Card
 	vecCard.clear();
 	int col = 0;
-	for (auto &deskCards : manager.GetPoker()->desk)
+	for (auto &deskCards : manager->GetPoker()->desk)
 	{
 		std::vector <CardDrawer> temp;
 		int x = vecDesk[col].x;
@@ -283,9 +281,9 @@ LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	}
 
 	//刷新堆牌
-	if (manager.GetPoker())
+	if (manager && manager->GetPoker())
 	{
-		vecCorner.resize(manager.GetPoker()->corner.size());
+		vecCorner.resize(manager->GetPoker()->corner.size());
 		for (int i = 0; i < vecCorner.size(); ++i)
 		{
 			vecCorner[i].x = rect.right - BORDER - cardWidth - i*BORDER;
@@ -337,7 +335,7 @@ void MainWindow::RedoDealAnimation()
 			qAnimation.push(new AModifyVecData(&vecCorner, { destX, destY }));
 	}
 
-	tempAni = new ACommand("redo", &manager);
+	tempAni = new ACommand("redo", manager.get());
 	qAnimation.push(tempAni);
 
 	//定时器开始，每次定时刷新pop一下动画序列
@@ -413,7 +411,7 @@ LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 	if (IDYES == MessageBox("是否重新开始本局游戏？", "询问", MB_YESNO))
 	{
 		//洗牌
-		manager.Command("d " + std::to_string(manager.GetPoker()->suitNum) + " " + std::to_string(manager.GetPoker()->seed));
+		manager->Command("d " + std::to_string(manager->GetPoker()->suitNum) + " " + std::to_string(manager->GetPoker()->seed));
 
 		//隐藏空白框
 		cardEmpty = false;
@@ -445,7 +443,8 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	if (suit != 0)
 	{
 		//洗牌
-		manager.Command("dr " + std::to_string(suit));
+		manager = make_shared<Manager>(suit);
+		//manager->Command("dr " + std::to_string(suit));
 
 		//隐藏空白框
 		cardEmpty = false;
@@ -476,13 +475,13 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 void MainWindow::RefreshByManager()
 {
 	//刷新 撤销 命令
-	if (manager.canRedo())
+	if (manager->CanRedo())
 		EnableMenuItem(::GetMenu(s_hWnd), ID_REDO, MF_ENABLED);
 	else
 		EnableMenuItem(::GetMenu(s_hWnd), ID_REDO, MF_DISABLED);
 
 	//刷新 发牌 命令
-	if (manager.GetPoker()->corner.empty())
+	if (manager->GetPoker()->corner.empty())
 	{
 		EnableMenuItem(::GetMenu(s_hWnd), ID_DEAL, MF_DISABLED);
 	}
@@ -490,8 +489,8 @@ void MainWindow::RefreshByManager()
 		EnableMenuItem(::GetMenu(s_hWnd), ID_DEAL, MF_ENABLED);
 
 
-	textTipBox = "分数：" + std::to_string(manager.GetPoker()->score) + "\r\n";
-	textTipBox += "操作：" + std::to_string(manager.GetPoker()->operation);
+	textTipBox = "分数：" + std::to_string(manager->GetPoker()->score) + "\r\n";
+	textTipBox += "操作：" + std::to_string(manager->GetPoker()->operation);
 
 	//RECT rect;
 	//::GetClientRect(s_hWnd,&rect);
@@ -500,7 +499,7 @@ void MainWindow::RefreshByManager()
 
 LRESULT MainWindow::OnDeal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	manager.Command("r");
+	manager->Command("r");
 	RefreshCard();
 
 	AddDealAnimation();
@@ -542,7 +541,7 @@ LRESULT MainWindow::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 		int col, row;
 		if (GetPtOnCard(ptPos, col, row))
 		{
-			if (manager.Command("pick " + to_string(col) + " " + to_string(row)))
+			if (manager->Command("pick " + to_string(col) + " " + to_string(row)))
 			{
 				bOnDrag = true;
 				dragCard.clear();
@@ -624,11 +623,11 @@ LRESULT MainWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 LRESULT MainWindow::OnRedo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	if (!bOnAnimation)
-	if (manager.GetLastAct() != NULL && manager.GetLastAct()->GetCommand() == "r")
-	{
-		RedoDealAnimation();
-	}
+	//if (!bOnAnimation)
+	//if (manager->GetLastAct() != NULL && manager->GetLastAct()->GetCommand() == "r")
+	//{
+	//	RedoDealAnimation();
+	//}
 	//manager.Command("redo");
 	return 0;
 }

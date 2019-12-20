@@ -71,6 +71,7 @@ bool Poker::isFinished()
 
 int Poker::GetValue() const
 {
+	//每组完成牌200
 	int value = finished.size()*200;
 
 	//
@@ -82,6 +83,7 @@ int Poker::GetValue() const
 		{
 			//一摞牌且非空
 
+			//eg. num=4, topPoint=10, value+=40
 			auto AddValue = [&value](int num,int topPoint)
 			{
 				if (num)
@@ -105,14 +107,18 @@ int Poker::GetValue() const
 				//点数相差1
 				if (pTop->point == pDown->point + 1)
 				{
+					//花色相同
 					if (pTop->suit == pDown->suit)
 					{
 						num++;
 					}
-					else
+					else//花色不同
 					{
+						//储存之前的序列
 						AddValue(num, pDown->point);
-						AddValue(1, pTop->point / 2);
+
+						//花色不同，点数差1的分值
+						AddValue(1,1);
 						num = 0;
 					}
 				}
@@ -133,12 +139,14 @@ int Poker::GetValue() const
 				}
 			}
 
+			//储存之前的序列
 			AddValue(num, pTop->point);
 
 		}
 
 		//hide card
 		int num = 10;
+		//没有翻开的牌分值：-10, -9, -8 ...
 		for (auto& card : cards)
 		{
 			if (card.show == false)

@@ -2,6 +2,9 @@
 #include "stdafx.h"
 #include "TImage.h"
 #include "Animation.h"
+#include "Manager.h"
+
+#include <memory>
 
 #define TIMER_DEAL 1
 #define TIMER_DEAL_ELPS 10
@@ -9,6 +12,8 @@
 class MainWindow :public CWindowImpl<MainWindow, CWindow, CFrameWinTraits>
 {
 private:
+	std::shared_ptr<Manager> manager;
+
 	static std::string textTipBox;
 
 	bool cardEmpty;
@@ -73,7 +78,7 @@ public:
 	void MainWindow::AddDealAnimation();
 	void MainWindow::RedoDealAnimation();
 
-	static void MainWindow::RefreshByManager();
+	void MainWindow::RefreshByManager();
 	void MainWindow::RefreshCard();
 
 	void MainWindow::NewGame();

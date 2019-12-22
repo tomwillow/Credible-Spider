@@ -92,6 +92,11 @@ bool Deal::Do(Poker* inpoker)
 	return true;
 }
 
+void Deal::StartAnimation()
+{
+
+}
+
 bool Deal::Redo(Poker* inpoker)
 {
 	poker = inpoker;

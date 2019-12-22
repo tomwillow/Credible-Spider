@@ -4,14 +4,25 @@
 class TImage
 {
 private:
+	int id;
+	HINSTANCE hInst;
 	HBITMAP hBitmapImag;
 	BITMAP bitmap;
-	LONG cxBitmap, cyBitmap;
+	LONG width, height;
+	double iWidth, iHeight;
 	HDC hdcMemImag;
+	void Draw(HDC hdc, int dest_x, int dest_y, int img_x = 0, int img_y = 0, DWORD rop = SRCCOPY);
 public:
-	TImage::TImage(HINSTANCE hInst, int Id);
+	POINT pt;
+	TImage(HINSTANCE hInst, int Id);
+	TImage(const TImage& img);
 	~TImage();
-	void TImage::Draw(HDC hdc, int dest_x, int dest_y, int img_x = 0, int img_y = 0, DWORD rop = SRCCOPY);
-	void TImage::Fill(HDC hdc, const RECT &rect);
+
+	void SetIWidth(double iWidth)
+	{
+		this->iWidth = iWidth;
+	}
+	void Draw(HDC hdc);
+	void Fill(HDC hdc, const RECT &rect);
 };
 

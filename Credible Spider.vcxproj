@@ -71,14 +71,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Animation\ACommand.cpp" />
-    <ClCompile Include="Animation\AModifyVecData.cpp" />
-    <ClCompile Include="Animation\ASetCard.cpp" />
-    <ClCompile Include="Animation\Animation.cpp" />
+    <ClCompile Include="AbstractAnimation.cpp" />
     <ClCompile Include="CardDrawer.cpp" />
     <ClCompile Include="Dialog\DialogChooseLevel.cpp" />
-    <ClCompile Include="Animation\ADrawCard.cpp" />
     <ClCompile Include="Poker\Restore.cpp" />
+    <ClCompile Include="PropertyAnimation.cpp" />
+    <ClCompile Include="SequentialAnimation.cpp" />
+    <ClCompile Include="SettingAnimation.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Poker\PMove.cpp" />
@@ -91,17 +90,17 @@
     <ClCompile Include="Poker\Poker.cpp" />
     <ClCompile Include="Poker\ReleaseCorner.cpp" />
     <ClCompile Include="TImage.cpp" />
+    <ClCompile Include="ValueAnimation.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Animation\ACommand.h" />
-    <ClInclude Include="Animation\AModifyVecData.h" />
-    <ClInclude Include="Animation\ASetCard.h" />
-    <ClInclude Include="Animation\Animation.h" />
+    <ClInclude Include="AbstractAnimation.h" />
     <ClInclude Include="CardDrawer.h" />
     <ClInclude Include="Dialog\DialogChooseLevel.h" />
-    <ClInclude Include="Animation\ADrawCard.h" />
     <ClInclude Include="Poker\Restore.h" />
+    <ClInclude Include="PropertyAnimation.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SequentialAnimation.h" />
+    <ClInclude Include="SettingAnimation.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="Poker\PMove.h" />
@@ -113,6 +112,7 @@
     <ClInclude Include="Poker\Poker.h" />
     <ClInclude Include="Poker\ReleaseCorner.h" />
     <ClInclude Include="TImage.h" />
+    <ClInclude Include="ValueAnimation.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Credible Spider.rc" />

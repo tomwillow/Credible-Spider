@@ -1,7 +1,6 @@
 #pragma once
 #include "stdafx.h"
 #include "TImage.h"
-#include "Animation.h"
 #include "Manager.h"
 
 #include <memory>
@@ -12,29 +11,21 @@
 class MainWindow :public CWindowImpl<MainWindow, CWindow, CFrameWinTraits>
 {
 private:
-	std::shared_ptr<Manager> manager;
+	Manager manager;
 
+	//
+	const int cardWidth = 71;
+	const int cardHeight = 96;
+	const int border = 10;
 	static std::string textTipBox;
-
-	bool cardEmpty;
-	TImage *imgBackground;
-	TImage *imgCardEmpty;
-	TImage *imgCardBack;
-	TImage *imgCard[52];
-	std::vector<POINT> vecDesk;//堆叠位置
-
-	std::vector<std::vector<CardDrawer>> vecCard;//绘制牌
-	static std::vector<POINT> vecCorner;
-
 	HBRUSH hBrushTipBox;
 	RECT rectTipBox;
 
-	bool bOnAnimation;
+	bool cardEmpty;
+	TImage *imgBackground;
 
-	std::queue<Animation *> qAnimation;
 
 	bool bOnDrag;
-	std::vector<std::pair<CardDrawer *,POINT>> dragCard;
 	POINT ptDragStart, ptChange;
 public:
 	bool doubleBuffer;
@@ -46,7 +37,7 @@ public:
 		MESSAGE_HANDLER(WM_CLOSE,OnClose)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 		MESSAGE_HANDLER(WM_PAINT, OnPaint)
-		MESSAGE_HANDLER(WM_TIMER, OnTimer)
+		MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkGnd)
 		MESSAGE_HANDLER(WM_SIZE, OnSize)
 		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
 		MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
@@ -58,15 +49,16 @@ public:
 	END_MSG_MAP()
 
 	LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-
 	LRESULT MainWindow::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-
 	LRESULT MainWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	void MainWindow::Draw(HDC hdc, const RECT &rect);
 
+	//在多线程动画时，拖动窗口会产生背景擦除，默认情况下会发生白色闪烁。
+	//重载WM_ERASEBKGND并返回false可设置为不擦除，消除闪烁
+	LRESULT MainWindow::OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
 	LRESULT MainWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT MainWindow::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT MainWindow::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT MainWindow::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -75,13 +67,11 @@ public:
 	bool MainWindow::GetPtOnCard(POINT ptMouse, int &col, int &row);
 	bool MainWindow::PtInCard(POINT ptMouse,POINT ptCard);
 
-	void MainWindow::AddDealAnimation();
 	void MainWindow::RedoDealAnimation();
 
 	void MainWindow::RefreshByManager();
 	void MainWindow::RefreshCard();
 
-	void MainWindow::NewGame();
 	LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnDeal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);

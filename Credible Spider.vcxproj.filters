@@ -54,25 +54,25 @@
     <ClCompile Include="CardDrawer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Animation\ACommand.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Animation\ADrawCard.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Animation\AModifyVecData.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Animation\Animation.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Animation\ASetCard.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Poker\Manager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Poker\Restore.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AbstractAnimation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SequentialAnimation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PropertyAnimation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingAnimation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ValueAnimation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -116,25 +116,25 @@
     <ClInclude Include="CardDrawer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Animation\ASetCard.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Animation\ACommand.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Animation\ADrawCard.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Animation\AModifyVecData.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Animation\Animation.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Poker\Manager.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Poker\Restore.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SequentialAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PropertyAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SettingAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ValueAnimation.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

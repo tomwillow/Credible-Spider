@@ -19,9 +19,5 @@ extern CComModule _Module;  // È«¾Ö_Module
 
 #define TIPBOX_WIDTH 200
 #define TIPBOX_HEIGHT 100
-#define BORDER 10
 
 extern COLORREF crTipBox;
-extern int cardWidth;
-extern int cardHeight;
-extern int cardGapH;

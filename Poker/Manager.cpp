@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <tuple>
+#include <set>
 #include <algorithm>
 #include <memory>
 #include <unordered_set>
@@ -17,7 +18,7 @@
 #include "TImage.h"
 
 #include "SequentialAnimation.h"
-#include "PropertyAnimation.h"
+#include "ValueAnimation.h"
 #include "SettingAnimation.h"
 #include "ValueAnimation.h"
 
@@ -26,11 +27,12 @@
 
 using namespace std;
 
-Manager::Manager():poker(nullptr),imgCornerDemo(nullptr)
+Manager::Manager() :poker(nullptr),
+hasGUI(false), bOnAnimation(false), bStopAnimation(false), hWnd(NULL), idCardEmpty(0), idCardBack(0), idCard1(0)// imgCornerDemo(nullptr),
 {
 }
 
-Manager::Manager(int suitNum):Manager()
+Manager::Manager(int suitNum) : Manager()
 {
 	poker = new Poker;
 
@@ -57,9 +59,6 @@ Manager::~Manager()
 	delete poker;
 	ReleaseRecord();
 
-	delete imgCornerDemo;
-	for (auto img : vecImgCorner)
-		delete img;
 	for (auto img : vecImgCardEmpty)
 		delete img;
 }
@@ -116,12 +115,18 @@ void Manager::NewGame(istream& in)
 	delete poker;
 	poker = new Poker;
 
-	int suitNum,seed;
+	int suitNum, seed;
 	cout << "--deal--" << endl << "input suitNum, seed: ";
-	in >> suitNum>>seed;
+	in >> suitNum >> seed;
 
 	shared_ptr<Action> action(new Deal(suitNum, seed));
 	action->Do(poker);
+	if (hasGUI)
+	{
+		InitialImage();
+
+		((Deal*)action.get())->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
+	}
 }
 
 void Manager::NewGameRandom(istream& in)
@@ -134,8 +139,18 @@ void Manager::NewGameRandom(istream& in)
 	cout << "--deal--" << endl << "input suitNum: ";
 	in >> suitNum;
 
-	shared_ptr<Action> action(new Deal(suitNum));
+	shared_ptr<Action> action(new Deal(suitNum,0));
 	action->Do(poker);
+	if (hasGUI)
+	{
+		InitialImage();
+
+		//LONG style = GetWindowLong(hWnd, GWL_STYLE);
+		//style ^= WS_THICKFRAME;
+		//SetWindowLong(hWnd, GWL_STYLE, style);
+
+		((Deal*)action.get())->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
+	}
 }
 
 bool Manager::Command(const string command)
@@ -242,8 +257,13 @@ bool Manager::readIn(istream& in)
 		if (command == "r")
 		{
 			shared_ptr<Action> action(new ReleaseCorner());
+			POINT ptStart = poker->corner.back().back().GetPos();
 			if (action->Do(poker))
 			{
+				if (hasGUI)
+				{
+					((ReleaseCorner*)action.get())->StartAnimation(hWnd, ptStart, bOnAnimation, bStopAnimation);
+				}
 				record.push_back(action);
 				cout << *poker;
 			}
@@ -254,6 +274,11 @@ bool Manager::readIn(istream& in)
 			if (record.size() > 0)
 			{
 				record.back()->Redo(poker);
+				if (hasGUI)
+				{
+					((ReleaseCorner*)record.back().get())->RedoAnimation(hWnd, bOnAnimation, bStopAnimation);
+				}
+
 				record.pop_back();
 				success = true;
 
@@ -293,7 +318,7 @@ bool Manager::readIn(istream& in)
 	return success;
 }
 
-bool dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> poker, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited)
+bool Manager::dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> poker, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited)
 {
 	if (poker->isFinished())
 	{
@@ -541,6 +566,22 @@ bool dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> poker, vecto
 			//push记录
 			record.push_back(node.action);
 
+			if (hasGUI)
+			{
+					string s = to_string(calc);
+					SetWindowText(hWnd, s.c_str());
+
+					this->poker = node.poker.get();
+
+					RECT rc;
+					GetClientRect(hWnd, &rc);
+					OnSize(rc);
+					InvalidateRect(hWnd, &rc, false);
+					//SendMessage(hWnd, WM_PAINT, 0, 0);
+					UpdateWindow(hWnd);
+					Sleep(500);
+			}
+
 			if (dfs(result, success, calc, node.poker, record, states, stackLimited, calcLimited))
 			{
 				//只有终止才会返回true，如果任意位置返回true，此处将逐级终止递归
@@ -577,7 +618,7 @@ bool Manager::AutoSolve()
 	//1花色时，200可以解出70/100个；500可以解出89/100个；1000可以解出92/100个；8000可以解出98/100个
 	//2花色时，2000可以解出23/100个；8000可以解出32/100个
 	//4花色时，100000解出0/6个
-	int calcLimited = 200;
+	int calcLimited = 2000;
 
 	//480时栈溢出，所以必须小于480。不建议提高保留栈大小
 	int stackLimited = 400;
@@ -614,52 +655,68 @@ bool Manager::AutoSolve()
 
 bool Manager::CanRedo()
 {
-	return record.size() > 1;
+	return !record.empty();
 }
 
-void Manager::SetImage(int idCardEmpty, int idCardBack, int idCard1)
+void Manager::SetGUIProperty(HWND hWnd, int idCardEmpty, int idCardBack, int idCard1)
 {
-	if (poker == nullptr)
+	hasGUI = true;
+	this->hWnd = hWnd;
+	this->idCardEmpty = idCardEmpty;
+	this->idCardBack = idCardBack;
+	this->idCard1 = idCard1;
+
+	//释放空牌位
+	for (auto& img : vecImgCardEmpty)
+		delete img;
+
+	//创建空牌位
+	vecImgCardEmpty.resize(10);
+	for (auto& img : vecImgCardEmpty)
 	{
-		vecImgCardEmpty.resize(10);
-		for (auto& img : vecImgCardEmpty)
+		delete img;
+		img = new TImage(GetModuleHandle(NULL), idCardEmpty);
+	}
+}
+
+void Manager::InitialImage()
+{
+	//每张牌加入图片
+	for (auto& vec : poker->desk)
+		for (auto& card : vec)
 		{
-			delete img;
-			img = new TImage(GetModuleHandle(NULL), idCardEmpty);
+			int imageIndex = (card.suit - 1) * 13 + card.point - 1;
+			shared_ptr<TImage> imgCard(new TImage(GetModuleHandle(NULL), idCard1 + imageIndex));
+			shared_ptr<TImage> imgCardBack(new TImage(GetModuleHandle(NULL), idCardBack));
+			card.SetImage(imgCard, imgCardBack);
 		}
-	}
-	else
-	{
-		for (auto& vec : poker->desk)
-			for (auto& card : vec)
-			{
-				int imageIndex = (card.suit - 1) * 13 + card.point - 1;
-				TImage* imgCard = new TImage(GetModuleHandle(NULL), idCard1 + imageIndex);
-				TImage* imgCardBack = new TImage(GetModuleHandle(NULL), idCardBack);
-				card.SetImage(imgCard, imgCardBack);
-			}
 
-		imgCornerDemo = new TImage(GetModuleHandle(NULL), idCardBack);
+	//角落牌加入图片
+	for (auto& cards : poker->corner)
+		for (auto& card : cards)
+		{
+			int imageIndex = (card.suit - 1) * 13 + card.point - 1;
+			shared_ptr<TImage> imgCard(new TImage(GetModuleHandle(NULL), idCard1 + imageIndex));
+			shared_ptr<TImage> imgCardBack(new TImage(GetModuleHandle(NULL), idCardBack));
+			card.SetImage(imgCard, imgCardBack);
+		}
 
-		for (auto& img : vecImgCorner)
-			delete img;
-		vecImgCorner.resize(poker->corner.size());
-		for (auto& img : vecImgCorner)
-			img = new TImage(*imgCornerDemo);
-	}
 }
 
 void Manager::OnSize(RECT rect)
 {
-	
-	int cardGap = ((rect.right - border * 2) - cardWidth * 10) / 9;
+	if (hasGUI == false)
+		return;
+
+	//int cardGap = ((rect.right - border * 2) - cardWidth * 10) / 9;
+	int cardGap = (rect.right - cardWidth * 10) / 11;
 
 	if (poker == nullptr)
 	{
 		for (int i = 0; i < vecImgCardEmpty.size(); ++i)
 		{
 			//
-			int x = border + i * (cardWidth + cardGap);
+			int x = cardGap + i * (cardWidth + cardGap);
 			int y = border;
 
 			//空牌位置
@@ -672,7 +729,7 @@ void Manager::OnSize(RECT rect)
 		for (int i = 0; i < poker->desk.size(); ++i)
 		{
 			//
-			int x = border + i * (cardWidth + cardGap);
+			int x = cardGap + i * (cardWidth + cardGap);
 			int y = border;
 
 			//所有牌的位置
@@ -688,13 +745,19 @@ void Manager::OnSize(RECT rect)
 			}
 		}
 
-			//刷新堆牌
-			for (int i = 0; i < vecImgCorner.size(); ++i)
+		//刷新堆牌
+		for (int i = 0; i < poker->corner.size(); ++i)
+		{
+			int cornerX = rect.right - cardGap - cardWidth - i * border;
+			int cornerY = rect.bottom - border - cardHeight;
+			for (auto& card : poker->corner[i])
 			{
-				int cornerX = rect.right - border - cardWidth - i * border;
-				int cornerY = rect.bottom - border - cardHeight;
-				vecImgCorner[i]->pt = { cornerX,cornerY };
+				card.SetPos({ cornerX,cornerY });
+				card.SetVisible(false);
+
 			}
+			poker->corner[i].back().SetVisible(true);
+		}
 	}
 
 }
@@ -702,111 +765,40 @@ void Manager::OnSize(RECT rect)
 void Manager::Draw(HDC hdc)
 {
 
-	if (poker==nullptr)
+	if (poker == nullptr)
 	{
 		for (auto& imgEmpty : vecImgCardEmpty)
 			imgEmpty->Draw(hdc);
 	}
 	else
 	{
-		//
+		//桌牌
 		vector<Card*> vecTopCards;
 		for (auto& vec : poker->desk)
 		{
 			for (auto& card : vec)
 			{
-				if (card.GetZIndex() == 999)
+				if (card.GetZIndex() >0)
 					vecTopCards.push_back(&card);
 				else
 					card.Draw(hdc);
 			}
 		}
 
+		//堆牌
+		for (auto& cards : poker->corner)
+			for (auto& card : cards)
+				if (card.GetZIndex() >0)
+					vecTopCards.push_back(&card);
+				else
+					card.Draw(hdc);
+
+		sort(vecTopCards.begin(), vecTopCards.end(), [](const Card* c1, const Card* c2) {return c1->GetZIndex() < c2->GetZIndex(); });
+
+		//顶层牌
 		for (auto& topCard : vecTopCards)
 		{
 			topCard->Draw(hdc);
 		}
-
-		//Draw corner
-		for (auto& imgCorner : vecImgCorner)
-			imgCorner->Draw(hdc);
 	}
-}
-
-void Manager::StartDealAnimation(HWND hWnd)
-{
-	SequentialAnimation *seq=new SequentialAnimation;
-	POINT ptStart = vecImgCorner.back()->pt;
-
-	vector<AbstractAnimation*> vecFinal;
-	for (int i = 0; i < 54; ++i)
-	{
-		int deskIndex = i % 10;
-		int cardIndex = i / 10;
-
-		auto& card = poker->desk[deskIndex][cardIndex];
-
-		//所有牌设置为不可见
-		card.SetVisible(false);
-
-		//动画：设置为可见
-		SettingAnimation<Card, bool>* settingAni = new SettingAnimation<Card, bool>(&card);
-		settingAni->SetDuration(0);
-		settingAni->SetPFunc(&Card::SetVisible);
-		settingAni->SetValue(true);
-		seq->Add(settingAni);
-
-		//动画：从角落到指定位置
-		PropertyAnimation<Card>* ani = new PropertyAnimation<Card>(&card);
-		ani->SetDuration(250);
-		ani->SetPFunc(&Card::SetPos);
-		ani->SetStartValue(ptStart);
-		ani->SetEndValue(card.GetPos());
-		seq->Add(ani);
-
-		card.SetPos(ptStart);
-
-
-		//所有牌设置为背面
-		card.show = false;
-		
-		//最后10张牌
-		if (cardIndex == poker->desk[deskIndex].size() - 1)
-		{
-			//背面翻到不显示
-			ValueAnimation<TImage, double>* BackImageAni = new ValueAnimation<TImage, double>(&card.GetBackImage());
-			BackImageAni->SetDuration(25);
-			BackImageAni->SetPFunc(&TImage::SetIWidth);
-			BackImageAni->SetStartValue(1.0);
-			BackImageAni->SetEndValue(0.0);
-			vecFinal.push_back(BackImageAni);
-
-			//动画：显示牌正面
-			SettingAnimation<Card, bool>* settingAni = new SettingAnimation<Card, bool>(&card);
-			settingAni->SetDuration(0);
-			settingAni->SetPFunc(&Card::SetShow);
-			settingAni->SetValue(true);
-			vecFinal.push_back(settingAni);
-
-			//正面翻出来
-			ValueAnimation<TImage, double>* imgAni = new ValueAnimation<TImage, double>(&card.GetImage());
-			imgAni->SetDuration(25);
-			imgAni->SetPFunc(&TImage::SetIWidth);
-			imgAni->SetStartValue(0.0);
-			imgAni->SetEndValue(1.0);
-			vecFinal.push_back(imgAni);
-		}
-	}
-
-	for (auto& ani : vecFinal)
-		seq->Add(ani);
-
-	//seq->Start(hWnd);
-	auto fun = [](SequentialAnimation *seq,HWND hWnd)
-	{
-		seq->Start(hWnd);
-	};
-
-	thread t(fun,seq,hWnd);
-	t.detach();
 }

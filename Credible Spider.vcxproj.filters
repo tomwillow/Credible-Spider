@@ -60,19 +60,13 @@
     <ClCompile Include="Poker\Restore.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="AbstractAnimation.cpp">
+    <ClCompile Include="Animation\AbstractAnimation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="SequentialAnimation.cpp">
+    <ClCompile Include="Animation\SequentialAnimation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="PropertyAnimation.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="SettingAnimation.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ValueAnimation.cpp">
+    <ClCompile Include="POINT.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -122,19 +116,19 @@
     <ClInclude Include="Poker\Restore.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="AbstractAnimation.h">
+    <ClInclude Include="Animation\AbstractAnimation.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="SequentialAnimation.h">
+    <ClInclude Include="Animation\SequentialAnimation.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="PropertyAnimation.h">
+    <ClInclude Include="Animation\SettingAnimation.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="SettingAnimation.h">
+    <ClInclude Include="POINT.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ValueAnimation.h">
+    <ClInclude Include="Animation\ValueAnimation.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

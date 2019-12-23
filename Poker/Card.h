@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <memory>
 #include "TImage.h"
 
 class Card
@@ -10,7 +11,7 @@ private:
 	//
 	int z_index;
 	bool visible;
-	TImage* img, * imgBack;
+	std::shared_ptr<TImage> img, imgBack;
 public:
 
 	int suit;//»¨É« 1 2 3 4
@@ -24,10 +25,13 @@ public:
 		visible(true),z_index(0),img(nullptr),imgBack(nullptr) {}
 	Card(int suit, int point) :Card(suit,point,false) {}
 
+	Card(const Card& card):suit(card.suit),point(card.point),show(card.show),z_index(card.z_index),visible(card.visible),img(card.img),imgBack(card.imgBack)
+	{
+
+	}
+
 	~Card()
 	{
-		delete img;
-		delete imgBack;
 	}
 
 	void SetVisible(bool visible)
@@ -40,7 +44,7 @@ public:
 		z_index = z;
 	}
 
-	int GetZIndex()
+	int GetZIndex() const
 	{
 		return z_index;
 	}
@@ -56,15 +60,13 @@ public:
 		imgBack->pt = pt;
 	}
 
-	POINT GetPos()
+	POINT GetPos() const
 	{
 		return img->pt;
 	}
 
-	void SetImage(TImage* img, TImage* imgBack)
+	void SetImage(std::shared_ptr<TImage> img, std::shared_ptr<TImage> imgBack)
 	{
-		delete this->img;
-		delete this->imgBack;
 		this->img = img;
 		this->imgBack = imgBack;
 	}

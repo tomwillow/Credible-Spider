@@ -1,6 +1,9 @@
 #pragma once
 #include "AbstractAnimation.h"
 
+#include "POINT.h"
+
+#include <thread>
 #include <chrono>
 
 template <typename TClass, typename TType>
@@ -14,29 +17,29 @@ private:
 	using PSetFunc = void(TClass::*)(TType);
 	PSetFunc pSetFunc;
 public:
-	ValueAnimation(TClass* obj) :obj(obj) {}
+	ValueAnimation(TClass* obj,int duration,PSetFunc pSetFunc,TType vStart,TType vEnd) :obj(obj),duration(duration), pSetFunc(pSetFunc),vStart(vStart),vEnd(vEnd) {}
 
-	void SetDuration(int ms)
-	{
-		duration = ms;
-	}
+	//void SetDuration(int ms)
+	//{
+	//	duration = ms;
+	//}
 
-	void SetPFunc(PSetFunc pFunc)
-	{
-		pSetFunc = pFunc;
-	}
+	//void SetPFunc(PSetFunc pFunc)
+	//{
+	//	pSetFunc = pFunc;
+	//}
 
-	void SetStartValue(TType vStart)
-	{
-		this->vStart = vStart;
-	}
+	//void SetStartValue(TType vStart)
+	//{
+	//	this->vStart = vStart;
+	//}
 
-	void SetEndValue(TType vEnd)
-	{
-		this->vEnd = vEnd;
-	}
+	//void SetEndValue(TType vEnd)
+	//{
+	//	this->vEnd = vEnd;
+	//}
 
-	virtual void Start(HWND hWnd)override
+	virtual void Start(HWND hWnd, bool& StopAnimation)override
 	{
 		RECT rect;
 		GetClientRect(hWnd, &rect);
@@ -51,14 +54,14 @@ public:
 				break;
 
 			double percent = double(msPassed) / duration;
-			vNow= (vEnd -vStart) * percent + vStart;
+			vNow = (vEnd - vStart) * percent + vStart;
 			(obj->*pSetFunc)(vNow);
 			InvalidateRect(hWnd, &rect, FALSE);
 			UpdateWindow(hWnd);
+
 		}
 		(obj->*pSetFunc)(vEnd);
 		InvalidateRect(hWnd, &rect, FALSE);
 		UpdateWindow(hWnd);
 	}
 };
-

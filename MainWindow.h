@@ -11,17 +11,16 @@
 class MainWindow :public CWindowImpl<MainWindow, CWindow, CFrameWinTraits>
 {
 private:
-	Manager manager;
+	std::shared_ptr<Manager> manager;
 
 	//
 	const int cardWidth = 71;
 	const int cardHeight = 96;
 	const int border = 10;
-	static std::string textTipBox;
+	std::string textTipBox;
 	HBRUSH hBrushTipBox;
 	RECT rectTipBox;
 
-	bool cardEmpty;
 	TImage *imgBackground;
 
 
@@ -29,7 +28,6 @@ private:
 	POINT ptDragStart, ptChange;
 public:
 	bool doubleBuffer;
-	static HWND s_hWnd;
 	DECLARE_WND_CLASS(_T("Credible Spider Window"))
 
 	BEGIN_MSG_MAP(MainWindow)
@@ -44,8 +42,9 @@ public:
 		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
 		COMMAND_ID_HANDLER(ID_NEW_GAME, OnNewGame)
 		COMMAND_ID_HANDLER(ID_RENEW_GAME, OnReNewGame)
-		COMMAND_ID_HANDLER(ID_DEAL, OnDeal)
+		COMMAND_ID_HANDLER(ID_RELEASE, OnRelease)
 		COMMAND_ID_HANDLER(ID_REDO, OnRedo)
+		COMMAND_ID_HANDLER(ID_AUTO, OnAuto)
 	END_MSG_MAP()
 
 	LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -69,11 +68,12 @@ public:
 
 	void MainWindow::RedoDealAnimation();
 
-	void MainWindow::RefreshByManager();
+	void MainWindow::RefreshMenuAndTipBox();
 	void MainWindow::RefreshCard();
 
 	LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT MainWindow::OnDeal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT MainWindow::OnRelease(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnRedo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT MainWindow::OnAuto(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 };

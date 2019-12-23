@@ -30,5 +30,7 @@ public:
 		return "dr "+to_string(suitNum)+" "+to_string(seed);
 	}
 
+	//
+	void StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
 };
 

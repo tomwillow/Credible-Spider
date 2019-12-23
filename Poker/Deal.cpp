@@ -5,6 +5,13 @@
 #include <random>
 #include <Windows.h>
 
+#include <thread>
+#include "Card.h"
+#include "TImage.h"
+#include "SequentialAnimation.h"
+#include "SettingAnimation.h"
+#include "ValueAnimation.h"
+
 using namespace std;
 
 //返回1维数组，各花色依次1-13点，共8*13=104张
@@ -37,6 +44,9 @@ vector<Card> Deal::genInitCard() const
 bool Deal::Do(Poker* inpoker)
 {
 	poker = inpoker;
+
+	poker->suitNum = suitNum;
+	poker->seed = seed;
 
 	//先清理
 	poker->desk.clear();
@@ -92,9 +102,83 @@ bool Deal::Do(Poker* inpoker)
 	return true;
 }
 
-void Deal::StartAnimation()
+void Deal::StartAnimation(HWND hWnd,bool &bOnAnimation,bool &bStopAnimation)
 {
+	//刷新牌的最后位置
+	SendMessage(hWnd, WM_SIZE, 0, 0);
 
+	SequentialAnimation* seq = new SequentialAnimation;
+	POINT ptStart = poker->corner.back().back().GetPos();
+
+	vector<AbstractAnimation*> vecFinal;
+	for (int i = 0; i < 54; ++i)
+	{
+		int deskIndex = i % 10;
+		int cardIndex = i / 10;
+
+		auto& card = poker->desk[deskIndex][cardIndex];
+
+		//所有牌设置为不可见
+		card.SetVisible(false);
+
+		//动画：设置z-index
+		seq->Add(new SettingAnimation<Card, int>(&card,0,&Card::SetZIndex,999-i));
+
+		//动画：设置为可见
+		seq->Add(new SettingAnimation<Card, bool>(&card,0,&Card::SetVisible,true));
+
+		//动画：从角落到指定位置
+		seq->Add(new ValueAnimation<Card,POINT>(&card,25,&Card::SetPos,ptStart,card.GetPos()));
+
+		card.SetPos(ptStart);
+
+		//动画：恢复z-index
+		seq->Add(new SettingAnimation<Card, int>(&card,0,&Card::SetZIndex,0));
+
+		//所有牌设置为背面
+		card.show = false;
+
+		//最后10张牌
+		if (cardIndex == poker->desk[deskIndex].size() - 1)
+		{
+			//背面翻到不显示
+			vecFinal.push_back(new ValueAnimation<TImage, double>(&card.GetBackImage(),25,&TImage::SetIWidth,1.0,0.0));
+
+			//动画：显示牌正面
+			vecFinal.push_back(new SettingAnimation<Card, bool>(&card,0,&Card::SetShow,true));
+
+			//正面翻出来
+			vecFinal.push_back(new ValueAnimation<TImage, double>(&card.GetImage(),25,&TImage::SetIWidth,0.0,1.0));
+		}
+	}
+
+	for (auto& ani : vecFinal)
+		seq->Add(ani);
+
+	//
+	int msAll = 25 * 54+50*10 ;
+	int times = msAll / 125+1;
+	auto play = []()
+	{
+		PlaySound((LPCSTR)115, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+	};
+	while (times--)
+	{
+		thread t(play);
+		t.detach();
+	}
+
+	auto fun = [&](SequentialAnimation* seq, HWND hWnd)
+	{
+		bStopAnimation = false;
+		bOnAnimation = true;
+		seq->Start(hWnd, bStopAnimation);
+		delete seq;
+		bOnAnimation = false;
+	};
+
+	thread t(fun, seq, hWnd);
+	t.detach();
 }
 
 bool Deal::Redo(Poker* inpoker)

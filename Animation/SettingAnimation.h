@@ -1,5 +1,6 @@
 #pragma once
 #include "AbstractAnimation.h"
+
 #include <chrono>
 
 template <typename TClass,typename TType>
@@ -13,24 +14,24 @@ private:
 	using PSetFunc = void(TClass::*)(TType);
 	PSetFunc pSetFunc;
 public:
-	SettingAnimation(TClass* obj) :obj(obj) {}
+	SettingAnimation(TClass* obj,int duration,PSetFunc pSetFunc,TType value) :obj(obj),duration(duration),pSetFunc(pSetFunc),value(value) {}
 
-	void SetDuration(int ms)
-	{
-		duration = ms;
-	}
+	//void SetDuration(int ms)
+	//{
+	//	duration = ms;
+	//}
 
-	void SetPFunc(PSetFunc pFunc)
-	{
-		pSetFunc = pFunc;
-	}
+	//void SetPFunc(PSetFunc pFunc)
+	//{
+	//	pSetFunc = pFunc;
+	//}
 
-	void SetValue(TType value)
-	{
-		this->value = value;
-	}
+	//void SetValue(TType value)
+	//{
+	//	this->value = value;
+	//}
 
-	virtual void Start(HWND hWnd)override
+	virtual void Start(HWND hWnd, bool& StopAnimation)override
 	{
 		RECT rect;
 		GetClientRect(hWnd, &rect);

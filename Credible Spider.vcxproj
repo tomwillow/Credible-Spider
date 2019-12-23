@@ -71,13 +71,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AbstractAnimation.cpp" />
+    <ClCompile Include="Animation\AbstractAnimation.cpp" />
     <ClCompile Include="CardDrawer.cpp" />
     <ClCompile Include="Dialog\DialogChooseLevel.cpp" />
+    <ClCompile Include="POINT.cpp" />
     <ClCompile Include="Poker\Restore.cpp" />
-    <ClCompile Include="PropertyAnimation.cpp" />
-    <ClCompile Include="SequentialAnimation.cpp" />
-    <ClCompile Include="SettingAnimation.cpp" />
+    <ClCompile Include="Animation\SequentialAnimation.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Poker\PMove.cpp" />
@@ -90,17 +89,16 @@
     <ClCompile Include="Poker\Poker.cpp" />
     <ClCompile Include="Poker\ReleaseCorner.cpp" />
     <ClCompile Include="TImage.cpp" />
-    <ClCompile Include="ValueAnimation.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractAnimation.h" />
+    <ClInclude Include="Animation\AbstractAnimation.h" />
     <ClInclude Include="CardDrawer.h" />
     <ClInclude Include="Dialog\DialogChooseLevel.h" />
+    <ClInclude Include="POINT.h" />
     <ClInclude Include="Poker\Restore.h" />
-    <ClInclude Include="PropertyAnimation.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="SequentialAnimation.h" />
-    <ClInclude Include="SettingAnimation.h" />
+    <ClInclude Include="Animation\SequentialAnimation.h" />
+    <ClInclude Include="Animation\SettingAnimation.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="Poker\PMove.h" />
@@ -112,7 +110,7 @@
     <ClInclude Include="Poker\Poker.h" />
     <ClInclude Include="Poker\ReleaseCorner.h" />
     <ClInclude Include="TImage.h" />
-    <ClInclude Include="ValueAnimation.h" />
+    <ClInclude Include="Animation\ValueAnimation.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Credible Spider.rc" />

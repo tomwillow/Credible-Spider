@@ -3,11 +3,8 @@
 #include "Dialog/DialogChooseLevel.h"
 #pragma comment(lib,"winmm.lib")
 
+#include <thread>
 using namespace std;
-
-HWND MainWindow::s_hWnd = NULL;
-std::string MainWindow::textTipBox;
-
 
 void DrawTextAdvance(HDC hdc, const TCHAR text[], RECT *rect, long FontSize, int FontWeight, COLORREF color, const TCHAR FontName[], UINT format, int cEscapement = 0, int cOrientation = 0)
 {
@@ -52,16 +49,14 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 	imgBackground = new TImage(GetModuleHandle(NULL), IDB_BACKGROUND);
 
+	manager = make_shared<Manager>();
+	manager->SetGUIProperty(m_hWnd, IDB_CARDEMPTY, IDB_CARDBACK, IDB_CARD1);
 
 	hBrushTipBox = CreateSolidBrush(crTipBox);
 
-	cardEmpty = true;
 
 	bOnDrag = false;
 
-	//manager.pCmdFunc = &RefreshByManager;
-
-	s_hWnd = m_hWnd;
 
 	PostMessage(WM_COMMAND, MAKELONG(ID_NEW_GAME, 0), 0);
 	return 0;
@@ -69,12 +64,36 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 LRESULT MainWindow::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	auto answer = MessageBox(TEXT("关闭该游戏之前是否需要保存？"), TEXT("Credible Spider"), MB_YESNOCANCEL | MB_ICONQUESTION);
+	static bool ask = true;
+	int answer;
+	if (ask)
+		answer = MessageBox(TEXT("关闭该游戏之前是否需要保存？"), TEXT("Credible Spider"), MB_YESNOCANCEL | MB_ICONQUESTION);
+	else
+		answer = IDNO;
 	switch (answer)
 	{
 	case IDYES:
 	case IDNO:
-		DestroyWindow();
+	{
+		//如果manager正在动画
+		if (manager->bOnAnimation)
+		{
+			//设置停止标记，正在执行的动画检查到标记后做好清理进行退出
+			manager->bStopAnimation = true;
+
+			//设置为不询问，这样下次进入将不询问
+			ask = false;
+
+			//再次发送WM_CLOSE消息
+			//使用这种方式是因为动画会调用UpdataWindow，如果此处阻塞，正在执行的动画将卡死
+			//此处不阻塞，将关闭消息再次加入队列，确保关闭消息始终处于队列中
+			//这样，此处将多次到达，并检测动画是否结束
+			PostMessage(WM_CLOSE);
+			break;
+		}
+		else
+			DestroyWindow();
+	}
 	case IDCANCEL:
 		break;
 	}
@@ -101,6 +120,11 @@ void MainWindow::Draw(HDC hdc, const RECT &rect)
 	imgBackground->Fill(hdc, rect);
 
 	//TipBox
+	if (manager->GetPoker())
+	{
+		textTipBox = "分数：" + std::to_string(manager->GetPoker()->score) + "\r\n";
+		textTipBox += "操作：" + std::to_string(manager->GetPoker()->operation);
+	}
 
 	SelectObject(hdc, hBrushTipBox);
 	Rectangle(hdc, rectTipBox.left, rectTipBox.top, rectTipBox.right, rectTipBox.bottom);
@@ -108,7 +132,7 @@ void MainWindow::Draw(HDC hdc, const RECT &rect)
 	DrawTextCenter(hdc, textTipBox.c_str(), rectTipBox, 12, 400, RGB(255, 255, 255), TEXT("宋体"), DT_LEFT);
 
 	//
-	manager.Draw(hdc);
+	manager->Draw(hdc);
 
 
 }
@@ -190,7 +214,8 @@ LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	rectTipBox.bottom = rect.bottom - border;
 	rectTipBox.top = rectTipBox.bottom - TIPBOX_HEIGHT;
 
-	manager.OnSize(rect);
+	if (manager)
+		manager->OnSize(rect);
 
 	return 0;
 }
@@ -252,27 +277,9 @@ LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 	if (IDYES == MessageBox("是否重新开始本局游戏？", "询问", MB_YESNO))
 	{
 		//洗牌
-		manager.Command("new " + std::to_string(manager.GetPoker()->suitNum) + " " + std::to_string(manager.GetPoker()->seed));
+		manager->Command("new " + std::to_string(manager->GetPoker()->suitNum) + " " + std::to_string(manager->GetPoker()->seed));
 
-		////隐藏空白框
-		//cardEmpty = false;
-
-		////初始化牌位置
-		//RefreshCard();
-
-		////初始化各牌堆位置
-		//SendMessage(WM_SIZE);
-
-		////牌堆增加1个显示项
-		//int origX = vecCorner.back().x - border;
-		//int origY = vecCorner.back().y;
-		//vecCorner.push_back({ origX, origY });
-
-		//AddDealAnimation();
-
-		//Invalidate(false);
-
-		EnableMenuItem(GetMenu(), ID_DEAL, MF_ENABLED);
+		RefreshMenuAndTipBox();
 	}
 	return 0;
 }
@@ -283,80 +290,53 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	int suit = dialogChooseLevel.DoModal();
 	if (suit != 0)
 	{
-		//洗牌
-		manager.Command("newrandom " + std::to_string(suit));
-
-		manager.SetImage(IDB_CARDEMPTY, IDB_CARDBACK, IDB_CARD1);
-
-		//初始化各牌堆位置
-		SendMessage(WM_SIZE);
-
-		manager.StartDealAnimation(m_hWnd);
-		//
+		//随机新游戏
+		manager->Command("newrandom " + std::to_string(suit));
 
 
-		//manager.AnimationDeal();
+		//PlaySound((LPCSTR)IDR_WAVE_DEAL, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
 
-		////隐藏空白框
-		//cardEmpty = false;
-
-		////初始化牌位置
-		//RefreshCard();
-
-
-		//AddDealAnimation();
-
-		//发牌选项可见
-		EnableMenuItem(GetMenu(),ID_DEAL, MF_ENABLED);
-
-		//重新开始新游戏选项可见
-		EnableMenuItem(GetMenu(), ID_RENEW_GAME, MF_ENABLED);
-		
-	}
-	else//选的取消
-	{
-		manager.SetImage(IDB_CARDEMPTY, IDB_CARDBACK, IDB_CARD1);
-
-		//初始化各牌堆位置
-		SendMessage(WM_SIZE);
-
-		Invalidate(false);
+		RefreshMenuAndTipBox();
 	}
 
 	return 0;
 }
 
-void MainWindow::RefreshByManager()
+void MainWindow::RefreshMenuAndTipBox()
 {
-	//刷新 撤销 命令
-	if (manager.CanRedo())
-		EnableMenuItem(::GetMenu(s_hWnd), ID_REDO, MF_ENABLED);
-	else
-		EnableMenuItem(::GetMenu(s_hWnd), ID_REDO, MF_DISABLED);
-
-	//刷新 发牌 命令
-	if (manager.GetPoker()->corner.empty())
+	if (manager->GetPoker())
 	{
-		EnableMenuItem(::GetMenu(s_hWnd), ID_DEAL, MF_DISABLED);
+		//重新开始新游戏选项可见
+		EnableMenuItem(GetMenu(), ID_RENEW_GAME, MF_ENABLED);
 	}
 	else
-		EnableMenuItem(::GetMenu(s_hWnd), ID_DEAL, MF_ENABLED);
+	{
+		EnableMenuItem(GetMenu(), ID_RENEW_GAME, MF_DISABLED);
+	}
 
+	//刷新 撤销 命令
+	if (manager->CanRedo())
+		EnableMenuItem(::GetMenu(m_hWnd), ID_REDO, MF_ENABLED);
+	else
+		EnableMenuItem(::GetMenu(m_hWnd), ID_REDO, MF_DISABLED);
 
-	textTipBox = "分数：" + std::to_string(manager.GetPoker()->score) + "\r\n";
-	textTipBox += "操作：" + std::to_string(manager.GetPoker()->operation);
+	//刷新 发牌 命令
+	if (manager->GetPoker() && manager->GetPoker()->corner.empty())
+	{
+		EnableMenuItem(::GetMenu(m_hWnd), ID_RELEASE, MF_DISABLED);
+	}
+	else
+		EnableMenuItem(::GetMenu(m_hWnd), ID_RELEASE, MF_ENABLED);
 
-	//RECT rect;
-	//::GetClientRect(s_hWnd,&rect);
 
 }
 
-LRESULT MainWindow::OnDeal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+LRESULT MainWindow::OnRelease(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	manager.Command("r");
-	RefreshCard();
+	manager->Command("r");
 
-	//AddDealAnimation();
+	RefreshMenuAndTipBox();
+
 	return 0;
 }
 
@@ -474,11 +454,18 @@ LRESULT MainWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 LRESULT MainWindow::OnRedo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	//if (!bOnAnimation)
-	//if (manager->GetLastAct() != NULL && manager->GetLastAct()->GetCommand() == "r")
-	//{
-	//	RedoDealAnimation();
-	//}
-	//manager.Command("redo");
+	manager->Command("redo");
+
+	RefreshMenuAndTipBox();
+
+	return 0;
+}
+
+LRESULT MainWindow::OnAuto(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	manager->Command("auto");
+
+	RefreshMenuAndTipBox();
+
 	return 0;
 }

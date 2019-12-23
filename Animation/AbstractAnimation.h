@@ -4,6 +4,6 @@
 class AbstractAnimation
 {
 public:
-	virtual void Start(HWND hWnd)=0;
+	virtual void Start(HWND hWnd,bool &StopAnimation)=0;
 };
 

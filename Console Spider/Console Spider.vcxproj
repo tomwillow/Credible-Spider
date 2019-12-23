@@ -70,16 +70,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)Poker;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)Poker;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Poker;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Poker;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -136,6 +136,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Animation\AbstractAnimation.cpp" />
+    <ClCompile Include="..\Animation\SequentialAnimation.cpp" />
+    <ClCompile Include="..\POINT.cpp" />
     <ClCompile Include="..\Poker\Action.cpp" />
     <ClCompile Include="..\Poker\Add13.cpp" />
     <ClCompile Include="..\Poker\Card.cpp" />
@@ -145,9 +148,15 @@
     <ClCompile Include="..\Poker\Poker.cpp" />
     <ClCompile Include="..\Poker\ReleaseCorner.cpp" />
     <ClCompile Include="..\Poker\Restore.cpp" />
+    <ClCompile Include="..\TImage.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Animation\AbstractAnimation.h" />
+    <ClInclude Include="..\Animation\SequentialAnimation.h" />
+    <ClInclude Include="..\Animation\SettingAnimation.h" />
+    <ClInclude Include="..\Animation\ValueAnimation.h" />
+    <ClInclude Include="..\POINT.h" />
     <ClInclude Include="..\Poker\Action.h" />
     <ClInclude Include="..\Poker\Add13.h" />
     <ClInclude Include="..\Poker\Card.h" />
@@ -157,6 +166,7 @@
     <ClInclude Include="..\Poker\Poker.h" />
     <ClInclude Include="..\Poker\ReleaseCorner.h" />
     <ClInclude Include="..\Poker\Restore.h" />
+    <ClInclude Include="..\TImage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

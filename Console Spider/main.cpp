@@ -7,6 +7,8 @@
 #include <vector>
 #include "Manager.h"
 
+#pragma comment(lib,"winmm.lib")
+
 using namespace std;
 
 

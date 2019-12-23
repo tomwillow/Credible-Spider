@@ -45,6 +45,18 @@
     <ClCompile Include="..\Poker\Manager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\Animation\SequentialAnimation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Animation\AbstractAnimation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\POINT.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TImage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Poker\Action.h">
@@ -72,6 +84,24 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\Poker\Restore.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Animation\AbstractAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Animation\SequentialAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Animation\SettingAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Animation\ValueAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\POINT.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TImage.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

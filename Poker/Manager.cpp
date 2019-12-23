@@ -23,7 +23,8 @@
 #include "ValueAnimation.h"
 
 #include <thread>
-//#define _PRINT
+#define _PRINT
+#define _PAUSE
 
 using namespace std;
 
@@ -541,21 +542,23 @@ bool Manager::dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> pok
 		cout << "Do:" << *node.action << endl;
 #endif
 
+#ifdef _PAUSE
 		//此处暂停
 		//按任意键则走一步，输入数字则直到stack==round才停下
-		//if (poker->operation < round)
-		//{
-		//	;
-		//}
-		//else
-		//{
-		//	string s;
-		//	getline(cin, s);
-		//	if (s.empty())
-		//		round = -1;
-		//	else
-		//		round = stoi(s);
-		//}
+		if (poker->operation < round)
+		{
+			;
+		}
+		else
+		{
+			string s;
+			getline(cin, s);
+			if (s.empty())
+				round = -1;
+			else
+				round = stoi(s);
+		}
+#endif
 
 		//没出现过的状态
 		if (states.find(*node.poker) == states.end())

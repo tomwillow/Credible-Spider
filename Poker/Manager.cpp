@@ -23,8 +23,8 @@
 #include "ValueAnimation.h"
 
 #include <thread>
-#define _PRINT
-#define _PAUSE
+//#define _PRINT
+//#define _PAUSE
 
 using namespace std;
 
@@ -319,36 +319,8 @@ bool Manager::readIn(istream& in)
 	return success;
 }
 
-bool Manager::dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> poker, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited)
+void Manager::GetAllOperator(std::vector<Manager::Node> &actions,std::vector<int> &emptyIndex,std::shared_ptr<Poker> poker ,const unordered_set<Poker>& states)
 {
-	if (poker->isFinished())
-	{
-		result = *poker;
-		success = true;
-		return true;
-	}
-
-	if (poker->operation >= stackLimited || calc >= calcLimited)
-	{
-		return true;
-	}
-
-	calc++;
-
-	struct Node
-	{
-		int value;
-		shared_ptr<Poker> poker;
-		shared_ptr<Action> action;
-	};
-	vector<Node> actions;
-
-	auto ReleaseActions = [](vector<Node>& actions)
-	{
-		actions.clear();
-	};
-
-	vector<int> emptyIndex;
 	for (int dest = 0; dest < poker->desk.size(); ++dest)
 	{
 		auto& destCards = poker->desk[dest];
@@ -451,18 +423,46 @@ bool Manager::dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> pok
 		}
 	}
 
-	//待发区还有牌
+	//没有空位，且待发区还有牌
 	//加入发牌操作
-	if (!poker->corner.empty())
+	if (emptyIndex.empty() && !poker->corner.empty())
 	{
 		shared_ptr<Poker> newPoker(new Poker(*poker.get()));
 		shared_ptr<Action> action(new ReleaseCorner());
 		action->Do(newPoker.get());
 		actions.push_back({ poker->GetValue() - 100,newPoker,action });
 	}
+}
 
-	//没有空位
+bool Manager::dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> poker, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited)
+{
+	if (poker->isFinished())
+	{
+		result = *poker;
+		success = true;
+		return true;
+	}
+
+	if (poker->operation >= stackLimited || calc >= calcLimited)
+	{
+		return true;
+	}
+
+	calc++;
+
+	auto ReleaseActions = [](vector<Node>& actions)
+	{
+		actions.clear();
+	};
+
+
+	vector<Node> actions;
+	vector<int> emptyIndex;
+	GetAllOperator(actions, emptyIndex, poker, states);
+
+	//优化操作
 	if (emptyIndex.empty())
+		//没有空位
 		//去掉比当前评分还低的移牌
 		for (auto it = actions.begin(); it != actions.end();)
 		{

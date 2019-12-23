@@ -19,6 +19,14 @@ private:
 	bool Move(Poker* poker, std::istream& in);
 	bool CanPick(Poker* poker, std::istream& in);
 	void ReleaseRecord();
+
+	struct Node
+	{
+		int value;
+		std::shared_ptr<Poker> poker;
+		std::shared_ptr<Action> action;
+	};
+	void GetAllOperator(std::vector<Manager::Node>& actions, std::vector<int>& emptyIndex, std::shared_ptr<Poker> poker, const std::unordered_set<Poker>& states);
 	bool dfs(Poker& result, bool& success, int& calc, std::shared_ptr<Poker> poker, std::vector<std::shared_ptr<Action>>& record, std::unordered_set<Poker>& states, int stackLimited, int calcLimited);
 public:
 	Manager();
@@ -50,6 +58,3 @@ public:
 	bool bOnAnimation;
 	bool bStopAnimation;
 };
-
-
-bool dfs(Poker& result, bool& success, int& calc, std::shared_ptr<Poker> poker, std::vector<std::shared_ptr<Action>>& record, std::unordered_set<Poker>& states, int stackLimited, int calcLimited);

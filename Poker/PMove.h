@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Action.h"
+#include <vector>
+#include <memory>
+#include <Windows.h>
 
 class Restore;
 class PMove:public Action
@@ -11,11 +14,13 @@ private:
 	int dest;//目标编号
 	int num;//数量
 	bool shownLastCard;
-	Restore* restored;
+	std::shared_ptr<Restore> restored;
+
+	std::vector<POINT> vecStartPt;
 public:
 
 	PMove(int origIndex, int destIndex,int num) :
-		Action(), success(false), orig(origIndex),dest(destIndex), num(num),shownLastCard(false),restored(nullptr)
+		Action(), success(false), orig(origIndex),dest(destIndex), num(num),shownLastCard(false)
 	{
 
 	}
@@ -37,6 +42,9 @@ public:
 		using namespace std;
 		return string("m ") + to_string(orig) + " " + to_string(dest) + " " + to_string(num);
 	}
+
+	void StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
+	void RedoAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
 };
 
 bool CanPick(const Poker* poker, int origIndex, int num);

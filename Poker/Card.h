@@ -65,6 +65,11 @@ public:
 		return img->pt;
 	}
 
+	bool HasImage()
+	{
+		return img && imgBack;
+	}
+
 	void SetImage(std::shared_ptr<TImage> img, std::shared_ptr<TImage> imgBack)
 	{
 		this->img = img;

@@ -172,36 +172,6 @@ LRESULT MainWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 	return 0;
 }
 
-void MainWindow::RefreshCard()
-{
-	//Card
-	//vecCard.clear();
-	//int col = 0;
-	//for (auto &deskCards : manager.GetPoker()->desk)
-	//{
-	//	std::vector <CardDrawer> temp;
-	//	int x = vecDesk[col].x;
-	//	int y = vecDesk[col].y;
-	//	for (auto &card : deskCards)
-	//	{
-	//		if (card.show)
-	//		{
-	//			int index = GetIndexFromSuitPoint(card.suit, card.point);
-	//			temp.push_back({ imgCard[index],true, { x, y } });
-
-	//				y += cardGapH*2;
-	//		}
-	//		else
-	//		{
-	//			temp.push_back({ imgCardBack, true, { x, y } });
-
-	//				y += cardGapH;
-	//		}
-	//	}
-	//	vecCard.push_back(temp);
-	//	col++;
-	//}
-}
 
 LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
@@ -218,58 +188,6 @@ LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 		manager->OnSize(rect);
 
 	return 0;
-}
-
-void MainWindow::RedoDealAnimation()
-{
-	//RECT rect;
-	//GetClientRect(&rect);
-
-	//int destX;
-	//int destY;
-	//	destX = rect.right - BORDER - cardWidth-BORDER*(vecCorner.size());
-	//	destY = rect.bottom - BORDER - cardHeight;
-
-	//Animation *tempAni;
-
-	//int deskNum = 10;
-	//for (int i = 0; i < deskNum; ++i)
-	//{
-
-	//	//得到此牌动画的起止位置
-	//	int origX = vecCard[i].back().pt.x;
-	//	int origY = vecCard[i].back().pt.y + cardGapH;
-	//	CardDrawer *card = &vecCard[i].back();
-
-	//	//插值10帧进行动画
-	//	int frames = 5;
-	//	for (int f = 0; f < frames; ++f)
-	//	{
-	//		//插值
-	//		int x = (destX - origX)*f / frames + origX;
-	//		int y = (destY - origY)*f / frames + origY;
-
-	//		//加入动画序列
-	//		tempAni = new ADrawCard(card->img, { x, y });
-	//		qAnimation.push(tempAni);
-	//	}
-	//	//显示此牌
-	//	tempAni = new ASetCard(card, false);
-	//	qAnimation.push(tempAni);
-
-	//	//增加堆牌
-	//	if (i==0)
-	//		qAnimation.push(new AModifyVecData(&vecCorner, { destX, destY }));
-	//}
-
-	//tempAni = new ACommand("redo", &manager);
-	//qAnimation.push(tempAni);
-
-	////定时器开始，每次定时刷新pop一下动画序列
-	//bOnAnimation = true;
-	//SetTimer(TIMER_DEAL, TIMER_DEAL_ELPS);
-	////mciSendString("OPEN deal.wav ALIAS MUSIC", NULL, 0, 0);
-	//PlaySound((LPCSTR)IDR_WAVE_DEAL, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
 }
 
 LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
@@ -428,7 +346,7 @@ LRESULT MainWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 	ptPos.x = LOWORD(lParam);
 	ptPos.y = HIWORD(lParam);
-	string s="";
+	//string s="";
 	//int col = -1, row = -1;
 	//GetPtOnCard(ptPos, col, row);
 	//s = to_string(col) + "," + to_string(row);
@@ -447,7 +365,7 @@ LRESULT MainWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	//	Invalidate(false);
 	//}
 
-	SetWindowText(s.c_str());
+	//SetWindowText(s.c_str());
 	return 0;
 }
 

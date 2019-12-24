@@ -107,7 +107,7 @@ void Deal::StartAnimation(HWND hWnd,bool &bOnAnimation,bool &bStopAnimation)
 	//刷新牌的最后位置
 	SendMessage(hWnd, WM_SIZE, 0, 0);
 
-	SequentialAnimation* seq = new SequentialAnimation;
+	shared_ptr<SequentialAnimation> seq(make_shared<SequentialAnimation>());
 	POINT ptStart = poker->corner.back().back().GetPos();
 
 	vector<AbstractAnimation*> vecFinal;
@@ -152,8 +152,7 @@ void Deal::StartAnimation(HWND hWnd,bool &bOnAnimation,bool &bStopAnimation)
 		}
 	}
 
-	for (auto& ani : vecFinal)
-		seq->Add(ani);
+	seq->Add(vecFinal);
 
 	//
 	int msAll = 25 * 54+50*10 ;
@@ -168,17 +167,21 @@ void Deal::StartAnimation(HWND hWnd,bool &bOnAnimation,bool &bStopAnimation)
 		t.detach();
 	}
 
-	auto fun = [&](SequentialAnimation* seq, HWND hWnd)
-	{
-		bStopAnimation = false;
-		bOnAnimation = true;
-		seq->Start(hWnd, bStopAnimation);
-		delete seq;
-		bOnAnimation = false;
-	};
+	//auto fun = [&](SequentialAnimation* seq, HWND hWnd)
+	//{
+	//	bStopAnimation = false;
+	//	bOnAnimation = true;
+	//	seq->Start(hWnd, bStopAnimation);
+	//	delete seq;
+	//	bOnAnimation = false;
+	//};
 
-	thread t(fun, seq, hWnd);
-	t.detach();
+	//thread t(fun, seq, hWnd);
+	//t.detach();
+	bStopAnimation = false;
+	bOnAnimation = true;
+	seq->Start(hWnd, bStopAnimation);
+	bOnAnimation = false;
 }
 
 bool Deal::Redo(Poker* inpoker)

@@ -2,11 +2,23 @@
 
 #include "Poker.h"
 #include "Restore.h"
+#include <algorithm>
 #include <assert.h>
+
+
+#include <thread>
+#include "Card.h"
+#include "TImage.h"
+#include "ParallelAnimation.h"
+#include "SequentialAnimation.h"
+#include "ValueAnimation.h"
+#include "SettingAnimation.h"
+#include "ValueAnimation.h"
+#include "CardTurnOverAnimation.h"
+using namespace std;
 
 PMove::~PMove()
 {
-	delete restored;
 }
 
 //返回是否可以移动
@@ -65,13 +77,15 @@ bool PMove::Do(Poker* inpoker)
 
 	auto itDest = poker->desk[dest].end();
 
-	if (poker->desk[dest].empty() ||
-
+	//目标位置为空 或者
 		//目标堆叠的最外牌==移动牌顶层+1
+	if (poker->desk[dest].empty() ||
 		(itOrigBegin->point + 1 == poker->desk[dest].back().point))
 	{
 		//加上移来的牌
 		poker->desk[dest].insert(itDest, itOrigBegin, itOrigEnd);
+
+		for_each(itOrigBegin, itOrigEnd, [&](const Card& card) {vecStartPt.push_back(card.GetPos()); });
 
 		//擦除移走的牌
 		poker->desk[orig].erase(itOrigBegin, itOrigEnd);
@@ -89,20 +103,96 @@ bool PMove::Do(Poker* inpoker)
 		poker->operation++;
 
 		//进行回收
-		restored = new Restore(dest);
-		if (restored->Do(poker))
-			;
-		else
-		{
-			delete restored;
+		restored = make_shared<Restore>(dest);
+		if (restored->Do(poker) == false)
 			restored = nullptr;
-		}
 
 		success = true;
 		return true;
 	}
 	else
 		return false;
+}
+
+void PMove::StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
+{
+	if (success == false)
+		return;
+
+	//如果发生了回收事件，先恢复到回收前
+	if (restored)
+		restored->Redo(poker);
+
+	SendMessage(hWnd, WM_SIZE, 0, 0);
+
+	vector<POINT> vecEndPt;
+
+	SequentialAnimation* seq = new SequentialAnimation;
+
+	ParallelAnimation* para = new ParallelAnimation;
+
+	vector<AbstractAnimation*> vecFinalAni;
+	for (int i = 0; i < num; ++i)
+	{
+		int sz = poker->desk[dest].size();
+		auto& card = poker->desk[dest][sz - num +i];
+
+		vecEndPt.push_back(card.GetPos());
+
+		card.SetPos(vecStartPt[i]);
+		card.SetZIndex(999);
+
+		para->Add(new ValueAnimation<Card, POINT>(&card, 500, &Card::SetPos, vecStartPt[i], vecEndPt[i]));
+
+		//恢复z-index
+		vecFinalAni.push_back(new SettingAnimation<Card, int>(&card, 0, &Card::SetZIndex, 0));
+	}
+
+	//移动
+	seq->Add(para);
+
+	//翻出正面
+	if (shownLastCard)
+	{
+		auto& card = poker->desk[orig].back();
+		seq->Add(CardTurnOverAnimation::AddBackToFrontAnimation(card));
+	}
+
+	//恢复z-index
+	for (auto& ani : vecFinalAni)
+		seq->Add(ani);
+
+	auto fun = [&](SequentialAnimation* seq, HWND hWnd)
+	{
+		bStopAnimation = false;
+		bOnAnimation = true;
+		seq->Start(hWnd, bStopAnimation);
+		delete seq;
+		bOnAnimation = false;
+
+		//如果在Do中发生了回收，此时再进行回收
+		if (restored)
+		{
+			restored->Do(poker);
+			restored->StartAnimation(true, hWnd, bOnAnimation, bStopAnimation);
+		}
+	};
+
+	if (blocking)
+	{
+		//thread t(fun, seq, hWnd);
+		//t.join();
+		fun(seq, hWnd);
+	}
+	else
+	{
+		thread t(fun, seq, hWnd);
+		t.detach();
+	}
+}
+void PMove::RedoAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
+{
+
 }
 
 bool PMove::Redo(Poker* inpoker)
@@ -114,8 +204,6 @@ bool PMove::Redo(Poker* inpoker)
 	if (restored)
 	{
 		restored->Redo(poker);
-		delete restored;
-		restored = nullptr;
 	}
 
 	success = false;

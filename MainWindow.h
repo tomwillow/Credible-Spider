@@ -66,10 +66,8 @@ public:
 	bool MainWindow::GetPtOnCard(POINT ptMouse, int &col, int &row);
 	bool MainWindow::PtInCard(POINT ptMouse,POINT ptCard);
 
-	void MainWindow::RedoDealAnimation();
 
 	void MainWindow::RefreshMenuAndTipBox();
-	void MainWindow::RefreshCard();
 
 	LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);

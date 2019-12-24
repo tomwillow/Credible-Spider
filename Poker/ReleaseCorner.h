@@ -2,6 +2,7 @@
 
 #include "Action.h"
 
+#include <memory>
 #include <windows.h>
 
 class Restore;
@@ -9,10 +10,12 @@ class ReleaseCorner:public Action
 {
 private:
 	bool success;
-	Restore* restored;
+	std::shared_ptr<Restore> restored;
+
+	POINT ptStart;
 	std::vector<POINT> vecStartPos, vecEndPos;
 public:
-	ReleaseCorner() :Action(), success(false),restored(nullptr) {}
+	ReleaseCorner() :Action(), success(false), restored(nullptr), ptStart({ 0,0 }) {}
 
 	virtual ~ReleaseCorner() override;
 
@@ -24,7 +27,7 @@ public:
 		return std::string("r");
 	}
 
-	void StartAnimation(HWND hWnd,POINT ptStart, bool& bOnAnimation, bool& bStopAnimation);
-	void RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
+	void StartAnimation(bool blocking,HWND hWnd,bool& bOnAnimation, bool& bStopAnimation);
+	void RedoAnimation(bool blocking,HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
 };
 

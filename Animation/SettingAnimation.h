@@ -9,12 +9,11 @@ class SettingAnimation :
 {
 private:
 	TClass* obj;
-	int duration;
 	TType value;
 	using PSetFunc = void(TClass::*)(TType);
 	PSetFunc pSetFunc;
 public:
-	SettingAnimation(TClass* obj,int duration,PSetFunc pSetFunc,TType value) :obj(obj),duration(duration),pSetFunc(pSetFunc),value(value) {}
+	SettingAnimation(TClass* obj,int duration,PSetFunc pSetFunc,TType value) :AbstractAnimation(duration),obj(obj),pSetFunc(pSetFunc),value(value) {}
 
 	//void SetDuration(int ms)
 	//{
@@ -47,6 +46,14 @@ public:
 		(obj->*pSetFunc)(value);
 		InvalidateRect(hWnd, &rect, FALSE);
 		UpdateWindow(hWnd);
+	}
+
+	virtual void StartParallel(int ms) override
+	{
+		if (ms >= duration)
+		{
+			(obj->*pSetFunc)(value);
+		}
 	}
 };
 

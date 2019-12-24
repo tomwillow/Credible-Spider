@@ -69,6 +69,12 @@
     <ClCompile Include="POINT.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Animation\ParallelAnimation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Poker\CardTurnOverAnimation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
@@ -129,6 +135,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Animation\ValueAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\ParallelAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Poker\CardTurnOverAnimation.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

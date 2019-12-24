@@ -12,12 +12,11 @@ class ValueAnimation :
 {
 private:
 	TClass* obj;
-	int duration;
 	TType vStart, vEnd;
 	using PSetFunc = void(TClass::*)(TType);
 	PSetFunc pSetFunc;
 public:
-	ValueAnimation(TClass* obj,int duration,PSetFunc pSetFunc,TType vStart,TType vEnd) :obj(obj),duration(duration), pSetFunc(pSetFunc),vStart(vStart),vEnd(vEnd) {}
+	ValueAnimation(TClass* obj, int duration, PSetFunc pSetFunc, TType vStart, TType vEnd) :AbstractAnimation(duration), obj(obj), pSetFunc(pSetFunc), vStart(vStart), vEnd(vEnd) {}
 
 	//void SetDuration(int ms)
 	//{
@@ -45,16 +44,14 @@ public:
 		GetClientRect(hWnd, &rect);
 		using namespace std::chrono;
 		auto startTime = high_resolution_clock::now();
-		int msPassed = 0;
-		TType vNow;
 		while (1)
 		{
-			msPassed = duration_cast<milliseconds>(high_resolution_clock::now() - startTime).count();
+			int msPassed = duration_cast<milliseconds>(high_resolution_clock::now() - startTime).count();
 			if (msPassed > duration)
 				break;
 
 			double percent = double(msPassed) / duration;
-			vNow = (vEnd - vStart) * percent + vStart;
+			TType vNow = (vEnd - vStart) * percent + vStart;
 			(obj->*pSetFunc)(vNow);
 			InvalidateRect(hWnd, &rect, FALSE);
 			UpdateWindow(hWnd);
@@ -63,5 +60,12 @@ public:
 		(obj->*pSetFunc)(vEnd);
 		InvalidateRect(hWnd, &rect, FALSE);
 		UpdateWindow(hWnd);
+	}
+
+	virtual void StartParallel(int msPassed) override
+	{
+		double percent = double(msPassed) / duration;
+		TType vNow = (vEnd - vStart) * percent + vStart;
+		(obj->*pSetFunc)(vNow);
 	}
 };

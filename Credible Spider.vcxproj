@@ -62,6 +62,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -73,7 +74,9 @@
   <ItemGroup>
     <ClCompile Include="Animation\AbstractAnimation.cpp" />
     <ClCompile Include="CardDrawer.cpp" />
+    <ClCompile Include="Poker\CardTurnOverAnimation.cpp" />
     <ClCompile Include="Dialog\DialogChooseLevel.cpp" />
+    <ClCompile Include="Animation\ParallelAnimation.cpp" />
     <ClCompile Include="POINT.cpp" />
     <ClCompile Include="Poker\Restore.cpp" />
     <ClCompile Include="Animation\SequentialAnimation.cpp" />
@@ -92,7 +95,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation\AbstractAnimation.h" />
+    <ClInclude Include="Animation\ParallelAnimation.h" />
     <ClInclude Include="CardDrawer.h" />
+    <ClInclude Include="Poker\CardTurnOverAnimation.h" />
     <ClInclude Include="Dialog\DialogChooseLevel.h" />
     <ClInclude Include="POINT.h" />
     <ClInclude Include="Poker\Restore.h" />

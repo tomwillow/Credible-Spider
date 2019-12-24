@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <memory>
 #include <unordered_set>
+#include <typeinfo>
 
 #include "Add13.h"
 #include "Deal.h"
@@ -126,7 +127,12 @@ void Manager::NewGame(istream& in)
 	{
 		InitialImage();
 
-		((Deal*)action.get())->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
+		auto fun = [&](shared_ptr<Action> act)
+		{
+			((Deal*)act.get())->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
+		};
+		thread t(fun, action);
+		t.detach();
 	}
 }
 
@@ -140,7 +146,7 @@ void Manager::NewGameRandom(istream& in)
 	cout << "--deal--" << endl << "input suitNum: ";
 	in >> suitNum;
 
-	shared_ptr<Action> action(new Deal(suitNum,0));
+	shared_ptr<Action> action(new Deal(suitNum,708564125));
 	action->Do(poker);
 	if (hasGUI)
 	{
@@ -150,7 +156,12 @@ void Manager::NewGameRandom(istream& in)
 		//style ^= WS_THICKFRAME;
 		//SetWindowLong(hWnd, GWL_STYLE, style);
 
-		((Deal*)action.get())->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
+		auto fun = [&](shared_ptr<Action> act)
+		{
+			((Deal*)act.get())->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
+		};
+		thread t(fun,action);
+		t.detach();
 	}
 }
 
@@ -216,7 +227,7 @@ bool Manager::readIn(istream& in)
 
 		if (command == "auto")
 		{
-			AutoSolve();
+			success=AutoSolve();
 			break;
 			//continue;
 		}
@@ -258,12 +269,11 @@ bool Manager::readIn(istream& in)
 		if (command == "r")
 		{
 			shared_ptr<Action> action(new ReleaseCorner());
-			POINT ptStart = poker->corner.back().back().GetPos();
 			if (action->Do(poker))
 			{
 				if (hasGUI)
 				{
-					((ReleaseCorner*)action.get())->StartAnimation(hWnd, ptStart, bOnAnimation, bStopAnimation);
+					((ReleaseCorner*)action.get())->StartAnimation(true,hWnd, bOnAnimation, bStopAnimation);
 				}
 				record.push_back(action);
 				cout << *poker;
@@ -277,7 +287,7 @@ bool Manager::readIn(istream& in)
 				record.back()->Redo(poker);
 				if (hasGUI)
 				{
-					((ReleaseCorner*)record.back().get())->RedoAnimation(hWnd, bOnAnimation, bStopAnimation);
+					((ReleaseCorner*)record.back().get())->RedoAnimation(true,hWnd, bOnAnimation, bStopAnimation);
 				}
 
 				record.pop_back();
@@ -409,7 +419,7 @@ void Manager::GetAllOperator(std::vector<Manager::Node> &actions,std::vector<int
 					//不考虑花色，花色留给估值函数计算
 					if (it->point + 1 == pCard->point)//it->suit == pCard->suit && 
 					{
-						shared_ptr<Poker> tempPoker(new Poker(*poker.get()));
+						shared_ptr<Poker> tempPoker(new Poker(*poker));
 						shared_ptr<Action> action(new PMove(orig, dest, num));
 						action->Do(tempPoker.get());
 
@@ -427,18 +437,17 @@ void Manager::GetAllOperator(std::vector<Manager::Node> &actions,std::vector<int
 	//加入发牌操作
 	if (emptyIndex.empty() && !poker->corner.empty())
 	{
-		shared_ptr<Poker> newPoker(new Poker(*poker.get()));
+		shared_ptr<Poker> newPoker(new Poker(*poker));
 		shared_ptr<Action> action(new ReleaseCorner());
 		action->Do(newPoker.get());
 		actions.push_back({ poker->GetValue() - 100,newPoker,action });
 	}
 }
 
-bool Manager::dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> poker, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited)
+bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited)
 {
 	if (poker->isFinished())
 	{
-		result = *poker;
 		success = true;
 		return true;
 	}
@@ -458,7 +467,8 @@ bool Manager::dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> pok
 
 	vector<Node> actions;
 	vector<int> emptyIndex;
-	GetAllOperator(actions, emptyIndex, poker, states);
+	shared_ptr<Poker> tempPoker(new Poker(*poker));
+	GetAllOperator(actions, emptyIndex, tempPoker, states);
 
 	//优化操作
 	if (emptyIndex.empty())
@@ -512,7 +522,7 @@ bool Manager::dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> pok
 
 				//只添加一个移牌补空位的操作
 				shared_ptr<Action> action(new PMove(orig, emptyIndex.front(), 1));
-				shared_ptr<Poker> newPoker(new Poker(*poker.get()));
+				shared_ptr<Poker> newPoker(new Poker(*poker));
 				action->Do(newPoker.get());
 				actions.push_back({ newPoker->GetValue(),newPoker,action });
 			}
@@ -563,6 +573,17 @@ bool Manager::dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> pok
 		//没出现过的状态
 		if (states.find(*node.poker) == states.end())
 		{
+			node.action->Do(poker);
+			if (hasGUI && typeid(*node.action.get()) == typeid(ReleaseCorner))
+			{
+				((ReleaseCorner*)node.action.get())->StartAnimation(true, hWnd, bOnAnimation, bStopAnimation);
+			}
+			if (hasGUI && typeid(*node.action.get()) == typeid(PMove))
+			{
+				((PMove*)node.action.get())->StartAnimation(true, hWnd, bOnAnimation, bStopAnimation);
+			}
+
+
 			//加入状态
 			states.insert(*node.poker);
 
@@ -574,22 +595,29 @@ bool Manager::dfs(Poker& result, bool& success, int& calc, shared_ptr<Poker> pok
 					string s = to_string(calc);
 					SetWindowText(hWnd, s.c_str());
 
-					this->poker = node.poker.get();
-
 					RECT rc;
 					GetClientRect(hWnd, &rc);
 					OnSize(rc);
 					InvalidateRect(hWnd, &rc, false);
-					//SendMessage(hWnd, WM_PAINT, 0, 0);
 					UpdateWindow(hWnd);
-					Sleep(500);
+					Sleep(1);
 			}
 
-			if (dfs(result, success, calc, node.poker, record, states, stackLimited, calcLimited))
+			if (dfs(success, calc, record, states, stackLimited, calcLimited))
 			{
 				//只有终止才会返回true，如果任意位置返回true，此处将逐级终止递归
 				ReleaseActions(actions);
 				return true;
+			}
+
+			node.action->Redo(poker);
+			if (hasGUI && typeid(*node.action.get()) == typeid(ReleaseCorner))
+			{
+				((ReleaseCorner*)node.action.get())->RedoAnimation(true, hWnd, bOnAnimation, bStopAnimation);
+			}
+			if (hasGUI && typeid(*node.action.get()) == typeid(PMove))
+			{
+				((PMove*)node.action.get())->RedoAnimation(true, hWnd, bOnAnimation, bStopAnimation);
 			}
 
 			//pop记录
@@ -629,10 +657,10 @@ bool Manager::AutoSolve()
 	//因为传入的poker是智能指针，会被释放
 	//所以新建一个Poker保存完成状态
 	//未完成的话Poker是空的，因为dfs只有true才写入result
-	Poker* result = new Poker;
-	dfs(*result, success, calc, shared_ptr<Poker>(poker), record, states, stackLimited, calcLimited);
+	//Poker* result = new Poker;
+	dfs(success, calc, record, states, stackLimited, calcLimited);
 
-	poker = result;
+	//poker = result;
 
 	//输出计算量
 	cout << "Calculation:" << calc << endl;
@@ -711,37 +739,34 @@ void Manager::OnSize(RECT rect)
 	if (hasGUI == false)
 		return;
 
-	//int cardGap = ((rect.right - border * 2) - cardWidth * 10) / 9;
 	int cardGap = (rect.right - cardWidth * 10) / 11;
 
 	if (poker == nullptr)
 	{
+		//刷新空牌位位置
 		for (int i = 0; i < vecImgCardEmpty.size(); ++i)
 		{
-			//
 			int x = cardGap + i * (cardWidth + cardGap);
 			int y = border;
 
-			//空牌位置
 			vecImgCardEmpty[i]->pt.x = x;
 			vecImgCardEmpty[i]->pt.y = y;
 		}
 	}
 	else
 	{
+		//刷新桌牌位置
 		for (int i = 0; i < poker->desk.size(); ++i)
 		{
-			//
 			int x = cardGap + i * (cardWidth + cardGap);
 			int y = border;
 
-			//所有牌的位置
 			auto& cards = poker->desk[i];
 			int cardY = y;
 			for (auto it = cards.begin(); it != cards.end(); ++it)
 			{
 				it->SetPos({ x,cardY });
-				if (it->show)
+				if (it->show)//正面牌的y间距比背面牌大
 					cardY += cardGapH * 2;
 				else
 					cardY += cardGapH;
@@ -756,10 +781,17 @@ void Manager::OnSize(RECT rect)
 			for (auto& card : poker->corner[i])
 			{
 				card.SetPos({ cornerX,cornerY });
-				card.SetVisible(false);
 
 			}
-			poker->corner[i].back().SetVisible(true);
+		}
+
+		//刷新完成牌
+		for (int i = 0; i < poker->finished.size(); ++i)
+		{
+			int x = cardGap + i * xBorder;
+			int y = rect.bottom - border - cardHeight;
+			for (auto& card : poker->finished[i])
+				card.SetPos({ x,y });
 		}
 	}
 
@@ -770,12 +802,13 @@ void Manager::Draw(HDC hdc)
 
 	if (poker == nullptr)
 	{
+		//画空牌位
 		for (auto& imgEmpty : vecImgCardEmpty)
 			imgEmpty->Draw(hdc);
 	}
 	else
 	{
-		//桌牌
+		//画桌牌
 		vector<Card*> vecTopCards;
 		for (auto& vec : poker->desk)
 		{
@@ -788,17 +821,30 @@ void Manager::Draw(HDC hdc)
 			}
 		}
 
-		//堆牌
+		//画堆牌
 		for (auto& cards : poker->corner)
 			for (auto& card : cards)
-				if (card.GetZIndex() >0)
+			{
+				if (card.GetZIndex() > 0)
 					vecTopCards.push_back(&card);
 				else
 					card.Draw(hdc);
+			}
 
+		//画完成牌
+		for (auto& cards : poker->finished)
+		{
+			for (auto& card : cards)
+				if (card.GetZIndex() > 0)
+					vecTopCards.push_back(&card);
+				else
+					card.Draw(hdc);
+		}
+
+		//顶层牌按z-index从小到大排序
 		sort(vecTopCards.begin(), vecTopCards.end(), [](const Card* c1, const Card* c2) {return c1->GetZIndex() < c2->GetZIndex(); });
 
-		//顶层牌
+		//画顶层牌
 		for (auto& topCard : vecTopCards)
 		{
 			topCard->Draw(hdc);

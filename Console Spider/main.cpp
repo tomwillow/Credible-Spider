@@ -14,19 +14,22 @@ using namespace std;
 
 int main()
 {
-	//_CrtSetBreakAlloc(937);
-	vector<int> ret;
-	for (int i=0;i<100;++i)
+	//_CrtSetBreakAlloc(35129);
 	{
-		cout << i << endl;
-		Manager manager(1, i);
-		if (manager.AutoSolve())
-			ret.push_back(i);
-		//manager.Command("auto");
-		//manager.readIn(cin);
-	cout << "solved:" << ret.size() << endl;
-	for (auto i : ret)
-		cout << i << " ";
+		vector<int> ret;
+		for (int i = 0; i < 1; ++i)
+		{
+			cout << i << endl;
+			Manager manager(1, i);
+			//if (manager.AutoSolve())
+			//	ret.push_back(i);
+			if (manager.Command("auto"))
+				ret.push_back(i);
+			//manager.readIn(cin);
+			cout << "solved:" << ret.size() << endl;
+			for (auto i : ret)
+				cout << i << " ";
+		}
 	}
 
 

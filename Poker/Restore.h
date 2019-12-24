@@ -1,18 +1,23 @@
 #pragma once
 #include "Action.h"
 #include <vector>
+#include <Windows.h>
 
 class Poker;
 class Restore :
 	public Action
 {
 private:
+
 	struct Oper
 	{
-		int origDeskIndex;
-		bool shownLastCard;
+		int origDeskIndex;//回收源堆叠序号
+		bool shownLastCard;//回收后底牌是否翻出
+		std::vector<POINT> vecStartPt;
+		POINT ptEnd;
 	};
 
+	//已回收成功的操作
 	std::vector<Oper> vecOper;
 
 	//返回对应堆叠能否回收
@@ -33,5 +38,6 @@ public:
 	{
 		return std::string("restore");
 	}
+	void StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
 };
 

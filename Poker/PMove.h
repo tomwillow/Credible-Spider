@@ -43,8 +43,8 @@ public:
 		return string("m ") + to_string(orig) + " " + to_string(dest) + " " + to_string(num);
 	}
 
-	void StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
-	void RedoAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
+	virtual void StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation) override;
+	virtual void RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation) override;
 };
 
 bool CanPick(const Poker* poker, int origIndex, int num);

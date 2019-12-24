@@ -87,7 +87,7 @@ bool ReleaseCorner::Redo(Poker* inpoker)
 
 
 
-void ReleaseCorner::StartAnimation(bool blocking,HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
+void ReleaseCorner::StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
 {
 	//如果发生了回收事件，先恢复到回收前
 	if (restored)
@@ -96,7 +96,7 @@ void ReleaseCorner::StartAnimation(bool blocking,HWND hWnd, bool& bOnAnimation, 
 	//刷新牌的最后位置
 	SendMessage(hWnd, WM_SIZE, 0, 0);
 
-	SequentialAnimation* seq = new SequentialAnimation;
+	shared_ptr<SequentialAnimation> seq(make_shared<SequentialAnimation>());
 
 	vector<AbstractAnimation*> vecFinalAni;
 	for (int i = 0; i < 10; ++i)
@@ -143,38 +143,22 @@ void ReleaseCorner::StartAnimation(bool blocking,HWND hWnd, bool& bOnAnimation, 
 		t.detach();
 	}
 
-	//seq->Start(hWnd);
-	auto fun = [&](SequentialAnimation* seq, HWND hWnd)
-	{
 		bStopAnimation = false;
 		bOnAnimation = true;
 		seq->Start(hWnd, bStopAnimation);
-		delete seq;
-		bOnAnimation = false;
 
 		//如果在Do中发生了回收，此时再进行回收
 		if (restored)
 		{
 			restored->Do(poker);
-			restored->StartAnimation(true, hWnd, bOnAnimation, bStopAnimation);
+			restored->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
 		}
-	};
-
-	if (blocking)
-	{
-		//thread t(fun, seq, hWnd);
-		//t.join();
-		fun(seq, hWnd);
-	}
-	else
-	{
-	thread t(fun, seq, hWnd);
-		t.detach();
-	}
+		bOnAnimation = false;
 }
 
-void ReleaseCorner::RedoAnimation(bool blocking,HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
+void ReleaseCorner::RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
 {
+
 	SequentialAnimation* seq = new SequentialAnimation;
 
 	for (int i = 0; i < 10; ++i)
@@ -212,9 +196,6 @@ void ReleaseCorner::RedoAnimation(bool blocking,HWND hWnd, bool& bOnAnimation, b
 		t.detach();
 	}
 
-	//seq->Start(hWnd);
-	auto fun = [&](SequentialAnimation* seq, HWND hWnd)
-	{
 		bStopAnimation = false;
 		bOnAnimation = true;
 		seq->Start(hWnd, bStopAnimation);
@@ -225,15 +206,4 @@ void ReleaseCorner::RedoAnimation(bool blocking,HWND hWnd, bool& bOnAnimation, b
 		GetClientRect(hWnd, &rc);
 		InvalidateRect(hWnd, &rc, false);
 		UpdateWindow(hWnd);
-	};
-
-	if (blocking)
-	{
-		fun(seq,hWnd);
-	}
-	else
-	{
-	thread t(fun, seq, hWnd);
-		t.detach();
-	}
 }

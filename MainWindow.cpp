@@ -1,6 +1,8 @@
 #include "MainWindow.h"
 
 #include "Dialog/DialogChooseLevel.h"
+#include "DialogAuto.h"
+
 #pragma comment(lib,"winmm.lib")
 
 #include <thread>
@@ -76,10 +78,10 @@ LRESULT MainWindow::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 	case IDNO:
 	{
 		//如果manager正在动画
-		if (manager->bOnAnimation)
+		if (manager->bOnThread)
 		{
 			//设置停止标记，正在执行的动画检查到标记后做好清理进行退出
-			manager->bStopAnimation = true;
+			manager->bStopThread = true;
 
 			//设置为不询问，这样下次进入将不询问
 			ask = false;
@@ -197,7 +199,7 @@ LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 		//洗牌
 		manager->Command("new " + std::to_string(manager->GetPoker()->suitNum) + " " + std::to_string(manager->GetPoker()->seed));
 
-		RefreshMenuAndTipBox();
+		RefreshMenu();
 	}
 	return 0;
 }
@@ -210,17 +212,13 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	{
 		//随机新游戏
 		manager->Command("newrandom " + std::to_string(suit));
-
-
-		//PlaySound((LPCSTR)IDR_WAVE_DEAL, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
-
-		RefreshMenuAndTipBox();
+		RefreshMenu();
 	}
 
 	return 0;
 }
 
-void MainWindow::RefreshMenuAndTipBox()
+void MainWindow::RefreshMenu()
 {
 	if (manager->GetPoker())
 	{
@@ -253,8 +251,7 @@ LRESULT MainWindow::OnRelease(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 {
 	manager->Command("r");
 
-	RefreshMenuAndTipBox();
-
+	RefreshMenu();
 	return 0;
 }
 
@@ -264,48 +261,6 @@ LRESULT MainWindow::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 	ptPos.x = LOWORD(lParam);
 	ptPos.y = HIWORD(lParam);
-
-		////发牌
-		//if (!vecCorner.empty())
-		//{
-		//	//得到牌堆顶端牌RECT
-		//	RECT rectCorner;
-		//	rectCorner.left = vecCorner.back().x;
-		//	rectCorner.top = vecCorner.back().y;
-		//	rectCorner.right = rectCorner.left + cardWidth;
-		//	rectCorner.bottom = rectCorner.top + cardHeight;
-
-		//	//发牌
-		//	BOOL b;
-		//	if (PtInRect(&rectCorner, ptPos))
-		//		OnDeal(NULL, NULL, NULL, b);
-		//}
-
-		////提示
-		//if (PtInRect(&rectTipBox, ptPos))
-		//{
-		//	PlaySound(LPCSTR(IDR_WAVE_TIP), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
-		//}
-
-		////移牌
-		//int col, row;
-		//if (GetPtOnCard(ptPos, col, row))
-		//{
-		//	if (manager.Command("pick " + to_string(col) + " " + to_string(row)))
-		//	{
-		//		bOnDrag = true;
-		//		dragCard.clear();
-
-		//		for (int j = row; j < vecCard[col].size(); ++j)
-		//		{
-		//			dragCard.push_back({ &vecCard[col][j], vecCard[col][j].pt });
-		//		}
-
-		//		ptDragStart = ptPos;
-		//		ptChange = { 0, 0 };
-		//		PlaySound((LPCSTR)IDR_WAVE_PICKUP, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
-		//	}
-		//}
 
 	return 0;
 }
@@ -346,26 +301,6 @@ LRESULT MainWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 	ptPos.x = LOWORD(lParam);
 	ptPos.y = HIWORD(lParam);
-	//string s="";
-	//int col = -1, row = -1;
-	//GetPtOnCard(ptPos, col, row);
-	//s = to_string(col) + "," + to_string(row);
-
-	//if (bOnDrag)
-	//{
-	//	ptChange.x = ptPos.x - ptDragStart.x;
-	//	ptChange.y = ptPos.y - ptDragStart.y;
-
-	//	s = to_string(ptChange.x) + "," + to_string(ptChange.y);
-	//	for (auto &pCard : dragCard)
-	//	{
-	//		pCard.first->pt.x = pCard.second.x + ptChange.x;
-	//		pCard.first->pt.y = pCard.second.y + ptChange.y;
-	//	}
-	//	Invalidate(false);
-	//}
-
-	//SetWindowText(s.c_str());
 	return 0;
 }
 
@@ -374,16 +309,16 @@ LRESULT MainWindow::OnRedo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 {
 	manager->Command("redo");
 
-	RefreshMenuAndTipBox();
-
+	RefreshMenu();
 	return 0;
 }
 
 LRESULT MainWindow::OnAuto(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	manager->Command("auto");
+	DialogAuto dialogAuto(manager);
+	dialogAuto.DoModal();
 
-	RefreshMenuAndTipBox();
+	RefreshMenu();
 
 	return 0;
 }

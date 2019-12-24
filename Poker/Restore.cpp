@@ -97,7 +97,7 @@ bool Restore::Do(Poker* inpoker)
 	return !vecOper.empty();
 }
 
-void Restore::StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
+void Restore::StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
 {
 	//Ë¢ÐÂÖÕµãÎ»ÖÃ
 	SendMessage(hWnd, WM_SIZE, 0, 0);
@@ -136,8 +136,6 @@ void Restore::StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool&
 	}
 
 
-	auto fun = [&](SequentialAnimation* seq, HWND hWnd)
-	{
 		bStopAnimation = false;
 		bOnAnimation = true;
 		seq->Start(hWnd, bStopAnimation);
@@ -148,17 +146,6 @@ void Restore::StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool&
 		GetClientRect(hWnd, &rc);
 		InvalidateRect(hWnd, &rc, false);
 		UpdateWindow(hWnd);
-	};
-
-	if (blocking)
-	{
-		fun(seq, hWnd);
-	}
-	else
-	{
-		thread t(fun, seq, hWnd);
-		t.detach();
-	}
 }
 
 bool Restore::Redo(Poker* inpoker)

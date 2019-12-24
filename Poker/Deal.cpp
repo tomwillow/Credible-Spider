@@ -167,18 +167,6 @@ void Deal::StartAnimation(HWND hWnd,bool &bOnAnimation,bool &bStopAnimation)
 		t.detach();
 	}
 
-	//auto fun = [&](SequentialAnimation* seq, HWND hWnd)
-	//{
-	//	bStopAnimation = false;
-	//	bOnAnimation = true;
-	//	seq->Start(hWnd, bStopAnimation);
-	//	delete seq;
-	//	bOnAnimation = false;
-	//};
-
-	//thread t(fun, seq, hWnd);
-	//t.detach();
-	bStopAnimation = false;
 	bOnAnimation = true;
 	seq->Start(hWnd, bStopAnimation);
 	bOnAnimation = false;

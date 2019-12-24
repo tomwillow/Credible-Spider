@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <Windows.h>
 
 class Poker;
 class Action
@@ -17,6 +18,8 @@ public:
 	virtual std::string GetCommand() const = 0;
 
 	friend std::ostream& operator<<(std::ostream& out, const Action& action);
+	virtual void StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)=0;
+	virtual void RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)=0;
 };
 
 std::ostream& operator<<(std::ostream& out, const Action& action);

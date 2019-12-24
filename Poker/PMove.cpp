@@ -114,7 +114,7 @@ bool PMove::Do(Poker* inpoker)
 		return false;
 }
 
-void PMove::StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
+void PMove::StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
 {
 	if (success == false)
 		return;
@@ -127,7 +127,7 @@ void PMove::StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& b
 
 	vector<POINT> vecEndPt;
 
-	SequentialAnimation* seq = new SequentialAnimation;
+	shared_ptr<SequentialAnimation> seq(make_shared<SequentialAnimation>());
 
 	ParallelAnimation* para = new ParallelAnimation;
 
@@ -162,35 +162,19 @@ void PMove::StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& b
 	for (auto& ani : vecFinalAni)
 		seq->Add(ani);
 
-	auto fun = [&](SequentialAnimation* seq, HWND hWnd)
-	{
 		bStopAnimation = false;
 		bOnAnimation = true;
 		seq->Start(hWnd, bStopAnimation);
-		delete seq;
-		bOnAnimation = false;
 
 		//如果在Do中发生了回收，此时再进行回收
 		if (restored)
 		{
 			restored->Do(poker);
-			restored->StartAnimation(true, hWnd, bOnAnimation, bStopAnimation);
+			restored->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
 		}
-	};
-
-	if (blocking)
-	{
-		//thread t(fun, seq, hWnd);
-		//t.join();
-		fun(seq, hWnd);
-	}
-	else
-	{
-		thread t(fun, seq, hWnd);
-		t.detach();
-	}
+		bOnAnimation = false;
 }
-void PMove::RedoAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
+void PMove::RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
 {
 
 }

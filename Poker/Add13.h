@@ -18,4 +18,7 @@ public:
 	{
 		return std::string("a ") + std::to_string(deskIndex);
 	}
+
+	virtual void StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation) override {}
+	virtual void RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation) override {}
 };

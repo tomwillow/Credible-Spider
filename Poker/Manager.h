@@ -20,7 +20,7 @@ private:
 	bool CanPick(Poker* poker, std::istream& in);
 	void ReleaseRecord();
 
-	bool AutoSolve();
+	bool AutoSolve(bool playAnimation);
 
 	bool hasGUI;
 	HWND hWnd;
@@ -40,7 +40,7 @@ private:
 		std::shared_ptr<Action> action;
 	};
 	void GetAllOperator(std::vector<Manager::Node>& actions, std::vector<int>& emptyIndex, std::shared_ptr<Poker> poker, const std::unordered_set<Poker>& states);
-	bool dfs(bool& success, int& calc, std::vector<std::shared_ptr<Action>>& record, std::unordered_set<Poker>& states, int stackLimited, int calcLimited);
+	bool dfs(bool& success, int& calc, std::vector<std::shared_ptr<Action>>& record, std::unordered_set<Poker>& states, int stackLimited, int calcLimited, bool playAnimation);
 public:
 	Manager();
 	Manager(int suitNum);
@@ -53,8 +53,8 @@ public:
 	bool readIn(std::istream& in);
 
 	//
-	bool bOnAnimation;
-	bool bStopAnimation;
+	bool bOnThread;
+	bool bStopThread;
 	void SetGUIProperty(HWND hWnd, int idCardEmpty, int idCardBack, int idCard1);
 	void OnSize(RECT rect);
 	void Draw(HDC hdc);

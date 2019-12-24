@@ -38,6 +38,8 @@ public:
 	{
 		return std::string("restore");
 	}
-	void StartAnimation(bool blocking, HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
+
+	virtual void StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation) override;
+	virtual void RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation) override {}
 };
 

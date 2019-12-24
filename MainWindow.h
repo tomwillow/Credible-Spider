@@ -67,7 +67,7 @@ public:
 	bool MainWindow::PtInCard(POINT ptMouse,POINT ptCard);
 
 
-	void MainWindow::RefreshMenuAndTipBox();
+	void MainWindow::RefreshMenu();
 
 	LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);

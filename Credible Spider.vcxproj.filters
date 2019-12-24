@@ -75,6 +75,21 @@
     <ClCompile Include="Poker\CardTurnOverAnimation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Dialog\DialogAuto.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\TCheckBox.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\TControl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\TButton.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\tstring.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
@@ -141,6 +156,21 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Poker\CardTurnOverAnimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\TButton.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\TCheckBox.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\TControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\tstring.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Dialog\DialogAuto.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

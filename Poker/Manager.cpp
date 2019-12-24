@@ -30,7 +30,7 @@
 using namespace std;
 
 Manager::Manager() :poker(nullptr),
-hasGUI(false), bOnAnimation(false), bStopAnimation(false), hWnd(NULL), idCardEmpty(0), idCardBack(0), idCard1(0)// imgCornerDemo(nullptr),
+hasGUI(false), bOnThread(false), bStopThread(false), hWnd(NULL), idCardEmpty(0), idCardBack(0), idCard1(0)// imgCornerDemo(nullptr),
 {
 }
 
@@ -129,7 +129,7 @@ void Manager::NewGame(istream& in)
 
 		auto fun = [&](shared_ptr<Action> act)
 		{
-			((Deal*)act.get())->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
+			act->StartAnimation(hWnd, bOnThread, bStopThread);
 		};
 		thread t(fun, action);
 		t.detach();
@@ -146,7 +146,7 @@ void Manager::NewGameRandom(istream& in)
 	cout << "--deal--" << endl << "input suitNum: ";
 	in >> suitNum;
 
-	shared_ptr<Action> action(new Deal(suitNum,708564125));
+	shared_ptr<Action> action(new Deal(suitNum, 708564125));
 	action->Do(poker);
 	if (hasGUI)
 	{
@@ -158,9 +158,9 @@ void Manager::NewGameRandom(istream& in)
 
 		auto fun = [&](shared_ptr<Action> act)
 		{
-			((Deal*)act.get())->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
+			act->StartAnimation(hWnd, bOnThread, bStopThread);
 		};
-		thread t(fun,action);
+		thread t(fun, action);
 		t.detach();
 	}
 }
@@ -227,7 +227,9 @@ bool Manager::readIn(istream& in)
 
 		if (command == "auto")
 		{
-			success=AutoSolve();
+			int bPlayAnimation;
+			in >> bPlayAnimation;
+			success = AutoSolve(bPlayAnimation);
 			break;
 			//continue;
 		}
@@ -273,7 +275,7 @@ bool Manager::readIn(istream& in)
 			{
 				if (hasGUI)
 				{
-					((ReleaseCorner*)action.get())->StartAnimation(true,hWnd, bOnAnimation, bStopAnimation);
+					action->StartAnimation(hWnd, bOnThread, bStopThread);
 				}
 				record.push_back(action);
 				cout << *poker;
@@ -287,7 +289,7 @@ bool Manager::readIn(istream& in)
 				record.back()->Redo(poker);
 				if (hasGUI)
 				{
-					((ReleaseCorner*)record.back().get())->RedoAnimation(true,hWnd, bOnAnimation, bStopAnimation);
+					record.back()->RedoAnimation(hWnd, bOnThread, bStopThread);
 				}
 
 				record.pop_back();
@@ -329,7 +331,7 @@ bool Manager::readIn(istream& in)
 	return success;
 }
 
-void Manager::GetAllOperator(std::vector<Manager::Node> &actions,std::vector<int> &emptyIndex,std::shared_ptr<Poker> poker ,const unordered_set<Poker>& states)
+void Manager::GetAllOperator(std::vector<Manager::Node>& actions, std::vector<int>& emptyIndex, std::shared_ptr<Poker> poker, const unordered_set<Poker>& states)
 {
 	for (int dest = 0; dest < poker->desk.size(); ++dest)
 	{
@@ -444,7 +446,7 @@ void Manager::GetAllOperator(std::vector<Manager::Node> &actions,std::vector<int
 	}
 }
 
-bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited)
+bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited, bool playAnimation)
 {
 	if (poker->isFinished())
 	{
@@ -452,7 +454,8 @@ bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, 
 		return true;
 	}
 
-	if (poker->operation >= stackLimited || calc >= calcLimited)
+	//操作次数超出限制，计算量超出限制
+	if (poker->operation >= stackLimited || calc >= calcLimited || bStopThread)
 	{
 		return true;
 	}
@@ -573,16 +576,27 @@ bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, 
 		//没出现过的状态
 		if (states.find(*node.poker) == states.end())
 		{
+			static bool bNounce = true;
+			static bool bStop = false;
 			node.action->Do(poker);
-			if (hasGUI && typeid(*node.action.get()) == typeid(ReleaseCorner))
-			{
-				((ReleaseCorner*)node.action.get())->StartAnimation(true, hWnd, bOnAnimation, bStopAnimation);
-			}
-			if (hasGUI && typeid(*node.action.get()) == typeid(PMove))
-			{
-				((PMove*)node.action.get())->StartAnimation(true, hWnd, bOnAnimation, bStopAnimation);
-			}
 
+			if (hasGUI)
+			{
+				string s{ "Credible Spider (求解步骤=" + to_string(calc) + ")" };
+				SetWindowText(hWnd, s.c_str());
+
+				if (playAnimation)
+					node.action->StartAnimation(hWnd, bNounce, bStop);
+				else
+				{
+					RECT rc;
+					GetClientRect(hWnd, &rc);
+					OnSize(rc);
+					InvalidateRect(hWnd, &rc, false);
+					UpdateWindow(hWnd);
+					Sleep(1);
+				}
+			}
 
 			//加入状态
 			states.insert(*node.poker);
@@ -590,20 +604,7 @@ bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, 
 			//push记录
 			record.push_back(node.action);
 
-			if (hasGUI)
-			{
-					string s = to_string(calc);
-					SetWindowText(hWnd, s.c_str());
-
-					RECT rc;
-					GetClientRect(hWnd, &rc);
-					OnSize(rc);
-					InvalidateRect(hWnd, &rc, false);
-					UpdateWindow(hWnd);
-					Sleep(1);
-			}
-
-			if (dfs(success, calc, record, states, stackLimited, calcLimited))
+			if (dfs(success, calc, record, states, stackLimited, calcLimited,playAnimation))
 			{
 				//只有终止才会返回true，如果任意位置返回true，此处将逐级终止递归
 				ReleaseActions(actions);
@@ -611,13 +612,19 @@ bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, 
 			}
 
 			node.action->Redo(poker);
-			if (hasGUI && typeid(*node.action.get()) == typeid(ReleaseCorner))
+			if (hasGUI)
 			{
-				((ReleaseCorner*)node.action.get())->RedoAnimation(true, hWnd, bOnAnimation, bStopAnimation);
-			}
-			if (hasGUI && typeid(*node.action.get()) == typeid(PMove))
-			{
-				((PMove*)node.action.get())->RedoAnimation(true, hWnd, bOnAnimation, bStopAnimation);
+				if (playAnimation)
+					node.action->RedoAnimation(hWnd, bNounce, bStop);
+				else
+				{
+					RECT rc;
+					GetClientRect(hWnd, &rc);
+					OnSize(rc);
+					InvalidateRect(hWnd, &rc, false);
+					UpdateWindow(hWnd);
+					Sleep(1);
+				}
 			}
 
 			//pop记录
@@ -633,15 +640,18 @@ bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, 
 #endif
 			//直接转到下一个操作
 			it = actions.erase(it);
+		}
 	}
-}
 
 	ReleaseActions(actions);
 	return false;
 }
 
-bool Manager::AutoSolve()
+bool Manager::AutoSolve(bool playAnimation)
 {
+	bOnThread = true;
+	bStopThread = false;
+
 	unordered_set<Poker> states;
 	bool success = false;
 	int calc = 0;
@@ -658,7 +668,7 @@ bool Manager::AutoSolve()
 	//所以新建一个Poker保存完成状态
 	//未完成的话Poker是空的，因为dfs只有true才写入result
 	//Poker* result = new Poker;
-	dfs(success, calc, record, states, stackLimited, calcLimited);
+	dfs(success, calc, record, states, stackLimited, calcLimited,playAnimation);
 
 	//poker = result;
 
@@ -681,6 +691,8 @@ bool Manager::AutoSolve()
 			cout << "Call-stack depth >= " << stackLimited << endl;
 		cout << "Fail." << endl;
 	}
+	bOnThread = false;
+	bStopThread = false;
 	return success;
 }
 
@@ -814,7 +826,7 @@ void Manager::Draw(HDC hdc)
 		{
 			for (auto& card : vec)
 			{
-				if (card.GetZIndex() >0)
+				if (card.GetZIndex() > 0)
 					vecTopCards.push_back(&card);
 				else
 					card.Draw(hdc);

@@ -10,6 +10,8 @@
 #include <unordered_set>
 #include <typeinfo>
 
+#include "resource.h"
+
 #include "Add13.h"
 #include "Deal.h"
 #include "PMove.h"
@@ -18,7 +20,9 @@
 
 #include "TImage.h"
 
+#include "Firework.h"
 #include "SequentialAnimation.h"
+#include "ParallelAnimation.h"
 #include "ValueAnimation.h"
 #include "SettingAnimation.h"
 #include "ValueAnimation.h"
@@ -30,7 +34,10 @@
 using namespace std;
 
 Manager::Manager() :poker(nullptr),
-hasGUI(false), bOnThread(false), bStopThread(false), hWnd(NULL), idCardEmpty(0), idCardBack(0), idCard1(0)// imgCornerDemo(nullptr),
+hasGUI(false), bOnThread(false), bStopThread(false), hWnd(NULL),
+idCardEmpty(0), idCardBack(0), idCard1(0),
+dragInfo()
+
 {
 }
 
@@ -97,9 +104,13 @@ bool Manager::Move(Poker* poker, istream& in)
 	cout << "Chose: "; poker->printCard(orig, num);
 	cout << endl;
 	cout << "canMove? ";
-	shared_ptr<Action> action(new PMove(orig, dest, num));
+	shared_ptr<PMove> action(new PMove(orig, dest, num));
 	if (action->Do(poker))
 	{
+		if (hasGUI)
+		{
+			action->StartAnimationQuick(hWnd, bOnThread, bStopThread);
+		}
 		record.push_back(action);
 		cout << "success." << endl;
 		return true;
@@ -126,13 +137,7 @@ void Manager::NewGame(istream& in)
 	if (hasGUI)
 	{
 		InitialImage();
-
-		auto fun = [&](shared_ptr<Action> act)
-		{
-			act->StartAnimation(hWnd, bOnThread, bStopThread);
-		};
-		thread t(fun, action);
-		t.detach();
+		action->StartAnimation(hWnd, bOnThread, bStopThread);
 	}
 }
 
@@ -146,22 +151,12 @@ void Manager::NewGameRandom(istream& in)
 	cout << "--deal--" << endl << "input suitNum: ";
 	in >> suitNum;
 
-	shared_ptr<Action> action(new Deal(suitNum, 708564125));
+	shared_ptr<Action> action(new Deal(suitNum));
 	action->Do(poker);
 	if (hasGUI)
 	{
 		InitialImage();
-
-		//LONG style = GetWindowLong(hWnd, GWL_STYLE);
-		//style ^= WS_THICKFRAME;
-		//SetWindowLong(hWnd, GWL_STYLE, style);
-
-		auto fun = [&](shared_ptr<Action> act)
-		{
-			act->StartAnimation(hWnd, bOnThread, bStopThread);
-		};
-		thread t(fun, action);
-		t.detach();
+		action->StartAnimation(hWnd, bOnThread, bStopThread);
 	}
 }
 
@@ -268,10 +263,10 @@ bool Manager::readIn(istream& in)
 			cout << *poker;
 			continue;
 		}
-		if (command == "r")
+		if (command == "r")//release
 		{
 			shared_ptr<Action> action(new ReleaseCorner());
-			if (action->Do(poker))
+			if (success=action->Do(poker))
 			{
 				if (hasGUI)
 				{
@@ -287,9 +282,18 @@ bool Manager::readIn(istream& in)
 			if (record.size() > 0)
 			{
 				record.back()->Redo(poker);
+				//自动翻牌的撤销不加操作数，人工的要加
+				poker->score -= 2;
+				poker->operation += 2;
+
 				if (hasGUI)
 				{
-					record.back()->RedoAnimation(hWnd, bOnThread, bStopThread);
+					//record.back()->RedoAnimation(hWnd, bOnThread, bStopThread);
+					RECT rc;
+					GetClientRect(hWnd, &rc);
+					OnSize(rc);
+					InvalidateRect(hWnd, &rc, false);
+					UpdateWindow(hWnd);
 				}
 
 				record.pop_back();
@@ -331,8 +335,9 @@ bool Manager::readIn(istream& in)
 	return success;
 }
 
-void Manager::GetAllOperator(std::vector<Manager::Node>& actions, std::vector<int>& emptyIndex, std::shared_ptr<Poker> poker, const unordered_set<Poker>& states)
+std::vector<Manager::Node> Manager::GetAllOperator(std::vector<int>& emptyIndex, std::shared_ptr<Poker> poker, const unordered_set<Poker>& states)
 {
+	std::vector<Manager::Node> actions;
 	for (int dest = 0; dest < poker->desk.size(); ++dest)
 	{
 		auto& destCards = poker->desk[dest];
@@ -384,8 +389,8 @@ void Manager::GetAllOperator(std::vector<Manager::Node>& actions, std::vector<in
 		}
 		else//dest牌堆非空
 		{
-			//最底下的牌
-			Card* pCard = &destCards.back();
+			//最面上的牌
+			Card* pCardDest = &destCards.back();
 
 			//逐个牌堆遍历
 			for (int orig = 0; orig < poker->desk.size(); ++orig)
@@ -393,7 +398,7 @@ void Manager::GetAllOperator(std::vector<Manager::Node>& actions, std::vector<in
 				auto& origCards = poker->desk[orig];
 				if (origCards.empty())
 					continue;
-				if (&origCards.back() == pCard)
+				if (origCards.back().point >= pCardDest->point)
 					continue;
 
 				int num = 0;
@@ -402,7 +407,7 @@ void Manager::GetAllOperator(std::vector<Manager::Node>& actions, std::vector<in
 				{
 					num++;
 					//点数不符合，不能移动
-					if (it->point >= pCard->point)
+					if (it->point >= pCardDest->point)
 						break;
 
 					//没有显示的牌，不能移动
@@ -417,15 +422,14 @@ void Manager::GetAllOperator(std::vector<Manager::Node>& actions, std::vector<in
 							break;
 					}
 
-					//it ----> pCard，目标比源大1
+					//it ----> pCard，目标pCard比源it大1
 					//不考虑花色，花色留给估值函数计算
-					if (it->point + 1 == pCard->point)//it->suit == pCard->suit && 
+					if (it->point + 1 == pCardDest->point)//it->suit == pCard->suit && 
 					{
 						shared_ptr<Poker> tempPoker(new Poker(*poker));
 						shared_ptr<Action> action(new PMove(orig, dest, num));
-						action->Do(tempPoker.get());
-
-						if (states.find(*tempPoker) == states.end())
+						if (action->Do(tempPoker.get()) &&
+							(states.find(*tempPoker) == states.end()))
 							actions.push_back({ tempPoker->GetValue(),tempPoker,action });
 						break;
 					}
@@ -444,6 +448,7 @@ void Manager::GetAllOperator(std::vector<Manager::Node>& actions, std::vector<in
 		action->Do(newPoker.get());
 		actions.push_back({ poker->GetValue() - 100,newPoker,action });
 	}
+	return actions;
 }
 
 bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited, bool playAnimation)
@@ -468,10 +473,10 @@ bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, 
 	};
 
 
-	vector<Node> actions;
+
 	vector<int> emptyIndex;
 	shared_ptr<Poker> tempPoker(new Poker(*poker));
-	GetAllOperator(actions, emptyIndex, tempPoker, states);
+	vector<Node> actions = GetAllOperator(emptyIndex, tempPoker, states);
 
 	//优化操作
 	if (emptyIndex.empty())
@@ -516,7 +521,7 @@ bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, 
 				for (int i = 0; i < poker->desk.size(); ++i)
 				{
 					auto& cards = poker->desk[i];
-					if (!cards.empty() && cards.back().point < minPoint)
+					if (cards.size() > 1 && cards.back().point < minPoint)
 					{
 						minPoint = cards.back().point;
 						orig = i;
@@ -604,7 +609,7 @@ bool Manager::dfs(bool& success, int& calc, vector<shared_ptr<Action>>& record, 
 			//push记录
 			record.push_back(node.action);
 
-			if (dfs(success, calc, record, states, stackLimited, calcLimited,playAnimation))
+			if (dfs(success, calc, record, states, stackLimited, calcLimited, playAnimation))
 			{
 				//只有终止才会返回true，如果任意位置返回true，此处将逐级终止递归
 				ReleaseActions(actions);
@@ -668,7 +673,7 @@ bool Manager::AutoSolve(bool playAnimation)
 	//所以新建一个Poker保存完成状态
 	//未完成的话Poker是空的，因为dfs只有true才写入result
 	//Poker* result = new Poker;
-	dfs(success, calc, record, states, stackLimited, calcLimited,playAnimation);
+	dfs(success, calc, record, states, stackLimited, calcLimited, playAnimation);
 
 	//poker = result;
 
@@ -699,6 +704,13 @@ bool Manager::AutoSolve(bool playAnimation)
 bool Manager::CanRedo()
 {
 	return !record.empty();
+}
+
+void Manager::SetSoundId(int idTip, int idNoTip, int idWin)
+{
+	soundTip = idTip;
+	soundNoTip = idNoTip;
+	soundWin = idWin;
 }
 
 void Manager::SetGUIProperty(HWND hWnd, int idCardEmpty, int idCardBack, int idCard1)
@@ -744,6 +756,32 @@ void Manager::InitialImage()
 			card.SetImage(imgCard, imgCardBack);
 		}
 
+}
+
+RECT Manager::GetCardEmptyRect(RECT rect, int index)
+{
+	int cardGap = (rect.right - cardWidth * 10) / 11;
+
+	//空牌位位置
+	int x = cardGap + index * (cardWidth + cardGap);
+	int y = border;
+
+	return { x,y,x + cardWidth,y + cardHeight };
+}
+
+bool Manager::PtInRelease(POINT pt)
+{
+	bool ret = false;
+	for (auto& cards : poker->corner)
+	{
+		auto& card = cards.front();
+		int x = card.GetPos().x;
+		int y = card.GetPos().y;
+		RECT rect{ x,y,x + cardWidth,y + cardHeight };
+		if (PtInRect(&rect, pt))
+			return true;
+	}
+	return ret;
 }
 
 void Manager::OnSize(RECT rect)
@@ -809,7 +847,7 @@ void Manager::OnSize(RECT rect)
 
 }
 
-void Manager::Draw(HDC hdc)
+void Manager::Draw(HDC hdc, const RECT& rect)
 {
 
 	if (poker == nullptr)
@@ -820,17 +858,16 @@ void Manager::Draw(HDC hdc)
 	}
 	else
 	{
-		//画桌牌
 		vector<Card*> vecTopCards;
-		for (auto& vec : poker->desk)
+
+		//画完成牌
+		for (auto& cards : poker->finished)
 		{
-			for (auto& card : vec)
-			{
+			for (auto& card : cards)
 				if (card.GetZIndex() > 0)
 					vecTopCards.push_back(&card);
 				else
 					card.Draw(hdc);
-			}
 		}
 
 		//画堆牌
@@ -843,15 +880,18 @@ void Manager::Draw(HDC hdc)
 					card.Draw(hdc);
 			}
 
-		//画完成牌
-		for (auto& cards : poker->finished)
+		//画桌牌
+		for (auto& vec : poker->desk)
 		{
-			for (auto& card : cards)
+			for (auto& card : vec)
+			{
 				if (card.GetZIndex() > 0)
 					vecTopCards.push_back(&card);
 				else
 					card.Draw(hdc);
+			}
 		}
+
 
 		//顶层牌按z-index从小到大排序
 		sort(vecTopCards.begin(), vecTopCards.end(), [](const Card* c1, const Card* c2) {return c1->GetZIndex() < c2->GetZIndex(); });
@@ -861,5 +901,271 @@ void Manager::Draw(HDC hdc)
 		{
 			topCard->Draw(hdc);
 		}
+
+		//firework
+		if (poker->isFinished())
+		{
+			int fireworkNum = 10;
+			static vector<shared_ptr<Firework>> fireworks;
+
+			//烟花变少则补充
+			while (fireworks.size() < fireworkNum)
+			{
+				fireworks.push_back(make_shared<Firework>(rect.right, rect.bottom));
+			}
+
+			for (auto& f : fireworks)
+			{
+				//烟花放完进行替换
+				if (f->IsDead())
+					f = make_shared<Firework>(rect.right, rect.bottom);
+				f->Draw(hdc);
+			}
+		}
 	}
+}
+
+bool Manager::ShowOneHint()
+{
+	static Poker prevPoker;
+	static int i = 0;
+
+	unordered_set<Poker> uSet;
+	shared_ptr<Poker> tempPoker(make_shared<Poker>(*poker));
+	vector<int> emptyIndex;
+	auto actions = GetAllOperator(emptyIndex, tempPoker, uSet);
+
+	if (actions.empty() ||
+		(actions.size() == 1 && typeid(*actions.front().action) == typeid(ReleaseCorner)))
+	{
+		PlaySound((LPCSTR)soundNoTip, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+		return false;
+	}
+
+	PlaySound((LPCSTR)soundTip, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+
+	//按照评估分大到小排序
+	sort(actions.begin(), actions.end(), [](const Node& n1, const Node& n2) {return n1.value > n2.value; });
+
+	if (prevPoker == *poker)//同一局面的多次显示可移动操作
+	{
+	}
+	else
+		i = 0;
+
+	if (typeid(*actions[i].action) == typeid(ReleaseCorner))
+	{
+		i++;
+		if (i == actions.size())
+			i = 0;
+	}
+
+	shared_ptr<PMove> pMove = dynamic_pointer_cast<PMove>(actions[i].action);
+
+	pMove->Do(poker);
+	pMove->StartHintAnimation(hWnd, bOnThread, bStopThread);
+	pMove->Redo(poker);
+
+	RECT rect;
+	GetClientRect(hWnd, &rect);
+	InvalidateRect(hWnd, &rect, false);
+
+	i++;
+	if (i == actions.size())
+		i = 0;
+
+	prevPoker = *poker;
+
+	return true;
+}
+
+int Manager::GetDestIndex(RECT clientRect, POINT pt, int origIndex)
+{
+	if (poker == nullptr)
+		return -1;
+
+	for (int i = 0; i < poker->desk.size(); ++i)
+	{
+		if (i == origIndex)
+			continue;
+		if (poker->desk[i].size() == 0)
+		{
+			RECT rect = GetCardEmptyRect(clientRect, i);
+			if (PtInRect(&rect, pt))
+				return i;
+			else
+				continue;
+		}
+		for (int j = 0; j < poker->desk[i].size(); ++j)
+		{
+			auto& card = poker->desk[i][j];
+			RECT rect = { card.GetPos().x,card.GetPos().y,card.GetPos().x + cardWidth,card.GetPos().y + cardHeight };
+			if (PtInRect(&rect, pt))
+			{
+				return i;
+			}
+		}
+	}
+	return -1;
+}
+
+void Manager::GetIndexFromPoint(int& deskIndex, int& cardIndex, POINT pt)
+{
+	deskIndex = -1, cardIndex = -1;
+	if (poker == nullptr)
+		return;
+
+	for (int i = 0; i < poker->desk.size(); ++i)
+	{
+		for (int j = 0; j < poker->desk[i].size(); ++j)
+		{
+			auto& card = poker->desk[i][j];
+			RECT rect = { card.GetPos().x,card.GetPos().y,card.GetPos().x + cardWidth,card.GetPos().y + cardHeight };
+			if (PtInRect(&rect, pt))
+			{
+				deskIndex = i;
+				cardIndex = j;
+			}
+		}
+	}
+}
+
+bool Manager::OnLButtonDown(POINT pt)
+{
+	if (!hasGUI)
+		return false;
+
+	int deskIndex = -1, cardIndex = -1;
+	GetIndexFromPoint(deskIndex, cardIndex, pt);
+	if (deskIndex == -1)
+		return false;
+
+	int num = poker->desk[deskIndex].size() - cardIndex;
+	if (!::CanPick(poker, deskIndex, num))
+		return false;
+
+	dragInfo.vecCard.clear();
+	for (int i = 0; i < num; ++i)
+	{
+		auto& card = poker->desk[deskIndex][cardIndex + i];
+		card.SetZIndex(999);
+		dragInfo.vecCard.push_back({ &card,card.GetPos() - pt });
+	}
+	auto& topCard = poker->desk[deskIndex][cardIndex];
+
+
+	dragInfo.bOnDrag = true;
+	dragInfo.orig = deskIndex;
+	dragInfo.num = num;
+	dragInfo.cardIndex = cardIndex;
+
+	return true;
+}
+
+void Manager::GiveUpDrag()
+{
+	dragInfo.bOnDrag = false;
+
+	for (auto& pr : dragInfo.vecCard)
+	{
+		pr.first->SetZIndex(0);
+	}
+	dragInfo.vecCard.clear();
+
+	RECT rect;
+	GetClientRect(hWnd, &rect);
+	OnSize(rect);
+	InvalidateRect(hWnd, &rect, false);
+
+}
+
+bool Manager::OnMouseMove(POINT pt)
+{
+	if (!hasGUI)
+		return false;
+
+	if (dragInfo.bOnDrag)
+	{
+
+		if (!(GetAsyncKeyState(VK_LBUTTON) & 0x8000))
+		{
+			GiveUpDrag();
+		}
+		else
+		{
+			for (auto& pr : dragInfo.vecCard)
+			{
+				pr.first->SetPos(pt + pr.second);
+
+			}
+			RECT rect;
+			GetClientRect(hWnd, &rect);
+			InvalidateRect(hWnd, &rect, false);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Manager::OnLButtonUp(POINT pt)
+{
+	if (!hasGUI)
+		return false;
+
+	RECT rect;
+	GetClientRect(hWnd, &rect);
+	if (dragInfo.bOnDrag)
+	{
+		int dest = GetDestIndex(rect, pt, dragInfo.orig);
+
+		dragInfo.bOnDrag = false;
+
+		for (auto& pr : dragInfo.vecCard)
+		{
+			pr.first->SetZIndex(0);
+		}
+		dragInfo.vecCard.clear();
+		if (dest != -1 && ::CanMove(poker, dragInfo.orig, dest, dragInfo.num))
+		{
+			Command("m " + to_string(dragInfo.orig) + " " + to_string(dest) + " " + to_string(dragInfo.num));
+
+			OnSize(rect);
+			InvalidateRect(hWnd, &rect, false);
+			return true;
+		}
+	}
+	OnSize(rect);
+	InvalidateRect(hWnd, &rect, false);
+	return false;
+}
+
+bool Manager::GetIsWon()
+{
+	return poker->isFinished();
+}
+
+void Manager::Win()
+{
+	PlaySound((LPCSTR)soundWin, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+
+	record.clear();
+
+	auto fun = [&]()
+	{
+		bOnThread = true;
+		bStopThread = false;
+		while (bStopThread == false)
+		{
+			RECT rect;
+			GetClientRect(hWnd, &rect);
+			InvalidateRect(hWnd, &rect, false);
+			//UpdateWindow(hWnd);
+			//PostMessage(hWnd, WM_PAINT, 0, 0);
+			Sleep(25);//50 fps
+		}
+		bOnThread = false;
+	};
+
+	thread t(fun);
+	t.detach();
 }

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "MainWindow.h"
+#include "Resource.h"
 
 CComModule _Module;
 
@@ -24,10 +25,16 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hInstPrev,
 	wndMain.ShowWindow(nCmdShow);
 	wndMain.UpdateWindow();
 
+
+	HACCEL m_hAccelTable = LoadAccelerators(hInst, (LPCTSTR)IDR_ACCELERATOR);
+
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		if (!TranslateAccelerator(msg.hwnd, m_hAccelTable, &msg))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 
 	_Module.Term();

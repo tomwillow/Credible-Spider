@@ -6,6 +6,7 @@
 #include <Windows.h>
 
 #include <thread>
+#include "resource.h"
 #include "Card.h"
 #include "TImage.h"
 #include "SequentialAnimation.h"
@@ -159,7 +160,7 @@ void Deal::StartAnimation(HWND hWnd,bool &bOnAnimation,bool &bStopAnimation)
 	int times = msAll / 125+1;
 	auto play = []()
 	{
-		PlaySound((LPCSTR)115, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+		PlaySound((LPCSTR)IDR_WAVE_DEAL, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
 	};
 	while (times--)
 	{

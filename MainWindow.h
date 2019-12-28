@@ -43,8 +43,11 @@ public:
 		COMMAND_ID_HANDLER(ID_NEW_GAME, OnNewGame)
 		COMMAND_ID_HANDLER(ID_RENEW_GAME, OnReNewGame)
 		COMMAND_ID_HANDLER(ID_RELEASE, OnRelease)
+		COMMAND_ID_HANDLER(ID_RELEASE2, OnRelease)
+		COMMAND_ID_HANDLER(ID_SHOWMOVE, OnShowMove)
 		COMMAND_ID_HANDLER(ID_REDO, OnRedo)
 		COMMAND_ID_HANDLER(ID_AUTO, OnAuto)
+		COMMAND_ID_HANDLER(ID_ABOUT, OnAbout)
 	END_MSG_MAP()
 
 	LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -63,15 +66,14 @@ public:
 	LRESULT MainWindow::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT MainWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
-	bool MainWindow::GetPtOnCard(POINT ptMouse, int &col, int &row);
-	bool MainWindow::PtInCard(POINT ptMouse,POINT ptCard);
-
-
+	void EnableAllInput(bool enable);
 	void MainWindow::RefreshMenu();
 
 	LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnRelease(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT MainWindow::OnShowMove(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnRedo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnAuto(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT MainWindow::OnAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 };

@@ -17,6 +17,7 @@ private:
 	std::shared_ptr<Restore> restored;
 
 	std::vector<POINT> vecStartPt;
+	virtual void StartAnimation_inner(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation,double iDuration);
 public:
 
 	PMove(int origIndex, int destIndex,int num) :
@@ -44,7 +45,9 @@ public:
 	}
 
 	virtual void StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation) override;
+	virtual void StartAnimationQuick(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
 	virtual void RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation) override;
+	void PMove::StartHintAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation);
 };
 
 bool CanPick(const Poker* poker, int origIndex, int num);

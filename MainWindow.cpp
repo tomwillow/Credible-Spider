@@ -1,7 +1,8 @@
 #include "MainWindow.h"
 
-#include "Dialog/DialogChooseLevel.h"
+#include "DialogChooseLevel.h"
 #include "DialogAuto.h"
+#include "DialogAbout.h"
 
 #pragma comment(lib,"winmm.lib")
 
@@ -52,6 +53,7 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	imgBackground = new TImage(GetModuleHandle(NULL), IDB_BACKGROUND);
 
 	manager = make_shared<Manager>();
+	manager->SetSoundId(IDR_WAVE_TIP, IDR_WAVE_NOTIP,IDR_WAVE_SUCCESS);
 	manager->SetGUIProperty(m_hWnd, IDB_CARDEMPTY, IDB_CARDBACK, IDB_CARD1);
 
 	hBrushTipBox = CreateSolidBrush(crTipBox);
@@ -59,6 +61,7 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 	bOnDrag = false;
 
+	RefreshMenu();
 
 	PostMessage(WM_COMMAND, MAKELONG(ID_NEW_GAME, 0), 0);
 	return 0;
@@ -111,11 +114,6 @@ LRESULT MainWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return 0;
 }
 
-void PlaySoundDeal(void *p)
-{
-		PlaySound((LPCSTR)IDR_WAVE_DEAL, GetInstanceModule(NULL), SND_RESOURCE | SND_SYNC);
-}
-
 void MainWindow::Draw(HDC hdc, const RECT &rect)
 {
 	//Background
@@ -134,9 +132,7 @@ void MainWindow::Draw(HDC hdc, const RECT &rect)
 	DrawTextCenter(hdc, textTipBox.c_str(), rectTipBox, 12, 400, RGB(255, 255, 255), TEXT("宋体"), DT_LEFT);
 
 	//
-	manager->Draw(hdc);
-
-
+	manager->Draw(hdc,rect);
 }
 
 LRESULT MainWindow::OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -196,8 +192,12 @@ LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 {
 	if (IDYES == MessageBox("是否重新开始本局游戏？", "询问", MB_YESNO))
 	{
+		EnableAllInput(false);
+
 		//洗牌
 		manager->Command("new " + std::to_string(manager->GetPoker()->suitNum) + " " + std::to_string(manager->GetPoker()->seed));
+
+		EnableAllInput(true);
 
 		RefreshMenu();
 	}
@@ -206,13 +206,37 @@ LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 
 LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	DialogChooseLevel dialogChooseLevel;
-	int suit = dialogChooseLevel.DoModal();
+	static bool bOpenDialog = true;
+	static int suit=0;
+	if (bOpenDialog)
+	{
+		DialogChooseLevel dialogChooseLevel;
+		suit = dialogChooseLevel.DoModal();
+	}
 	if (suit != 0)
 	{
-		//随机新游戏
-		manager->Command("newrandom " + std::to_string(suit));
-		RefreshMenu();
+		if (manager->bOnThread)
+		{
+			manager->bStopThread = true;
+			bOpenDialog = false;
+			PostMessage(WM_COMMAND, MAKELONG(ID_NEW_GAME,0 ), 0);
+			return 0;
+		}
+
+		manager->bStopThread = false;
+		bOpenDialog = true;
+		auto fun = [&](int suit)
+		{
+			EnableAllInput(false);
+			//随机新游戏
+			manager->Command("newrandom " + std::to_string(suit));
+
+			EnableAllInput(true);
+
+			RefreshMenu();
+		};
+		thread t(fun, suit);
+		t.detach();
 	}
 
 	return 0;
@@ -224,34 +248,112 @@ void MainWindow::RefreshMenu()
 	{
 		//重新开始新游戏选项可见
 		EnableMenuItem(GetMenu(), ID_RENEW_GAME, MF_ENABLED);
+
+		EnableMenuItem(GetMenu(), ID_SHOWMOVE, MF_ENABLED);
 	}
 	else
 	{
-		EnableMenuItem(GetMenu(), ID_RENEW_GAME, MF_DISABLED);
+		EnableMenuItem(GetMenu(), ID_RENEW_GAME, MF_GRAYED);
+
+		EnableMenuItem(GetMenu(), ID_SHOWMOVE, MF_GRAYED);
 	}
+
+	if (manager->GetPoker() && !manager->GetIsWon())
+		EnableMenuItem(GetMenu(), ID_AUTO, MF_ENABLED);
+	else
+		EnableMenuItem(GetMenu(), ID_AUTO, MF_GRAYED);
 
 	//刷新 撤销 命令
 	if (manager->CanRedo())
-		EnableMenuItem(::GetMenu(m_hWnd), ID_REDO, MF_ENABLED);
+		EnableMenuItem(GetMenu(), ID_REDO, MF_ENABLED);
 	else
-		EnableMenuItem(::GetMenu(m_hWnd), ID_REDO, MF_DISABLED);
+		EnableMenuItem(GetMenu(), ID_REDO, MF_GRAYED);
 
 	//刷新 发牌 命令
-	if (manager->GetPoker() && manager->GetPoker()->corner.empty())
+	if (manager->GetPoker() && !manager->GetPoker()->corner.empty())
 	{
-		EnableMenuItem(::GetMenu(m_hWnd), ID_RELEASE, MF_DISABLED);
+		EnableMenuItem(GetMenu(), ID_RELEASE, MF_ENABLED);
+		EnableMenuItem(GetMenu(), ID_RELEASE2, MF_ENABLED);
 	}
 	else
-		EnableMenuItem(::GetMenu(m_hWnd), ID_RELEASE, MF_ENABLED);
+	{
+		EnableMenuItem(GetMenu(), ID_RELEASE, MF_GRAYED);
+		EnableMenuItem(GetMenu(), ID_RELEASE2, MF_GRAYED);
+	}
 
+	DrawMenuBar();
+}
 
+void MainWindow::EnableAllInput(bool enable)
+{
+	static vector<vector<UINT>> origin;
+	if (enable == false)
+	{
+		//禁用缩放与最大化框
+		LONG style = GetWindowLong(GWL_STYLE);
+		style ^= WS_THICKFRAME | WS_MAXIMIZEBOX;
+		SetWindowLong(GWL_STYLE, style);
+
+		//保存所有菜单项并禁用
+		origin.clear();
+
+		HMENU hMenu = GetMenu();
+		for (int i = 0; i < GetMenuItemCount(hMenu); ++i)
+		{
+			vector<UINT> temp;
+			HMENU hSubMenu = GetSubMenu(hMenu, i);
+
+			int id = GetMenuItemID(hMenu, i);
+			UINT state = GetMenuState(hMenu, id, MF_BYCOMMAND);
+			temp.push_back(state);
+			EnableMenuItem(hMenu, id, MF_GRAYED);
+			for (int j = 0; j < GetMenuItemCount(hSubMenu); ++j)
+			{
+				int id = GetMenuItemID(hSubMenu, j);
+
+				UINT state = GetMenuState(hMenu, id, MF_BYCOMMAND);
+				temp.push_back(state);
+				EnableMenuItem(hMenu, id, MF_GRAYED);
+			}
+			origin.push_back(temp);
+		}
+		DrawMenuBar();
+	}
+	else
+	{
+		//启用缩放与最大化框
+		LONG style = GetWindowLong(GWL_STYLE);
+		style ^= WS_THICKFRAME | WS_MAXIMIZEBOX;
+		SetWindowLong(GWL_STYLE, style);
+
+		//恢复所有菜单项
+		HMENU hMenu = GetMenu();
+		for (int i = 0; i < GetMenuItemCount(hMenu); ++i)
+		{
+			HMENU hSubMenu = GetSubMenu(hMenu, i);
+
+			int id = GetMenuItemID(hMenu, i);
+			EnableMenuItem(hMenu, id, origin[i][0]);
+			for (int j = 0; j < GetMenuItemCount(hSubMenu); ++j)
+			{
+				int id = GetMenuItemID(hSubMenu, j);
+
+				EnableMenuItem(hMenu, id, origin[i][j+1]);
+			}
+		}
+		origin.clear();
+		DrawMenuBar();
+	}
 }
 
 LRESULT MainWindow::OnRelease(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	manager->Command("r");
-
-	RefreshMenu();
+	if (manager->Command("r"))
+		RefreshMenu();
+	else
+	{
+		MessageBox("有空位不能发牌。", "提示", MB_OK);
+	}
 	return 0;
 }
 
@@ -262,37 +364,52 @@ LRESULT MainWindow::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	ptPos.x = LOWORD(lParam);
 	ptPos.y = HIWORD(lParam);
 
+	if (!manager->GetPoker())
+		return 0;
+
+	if (manager->bOnThread)
+		return 0;
+
+	if (manager->OnLButtonDown(ptPos))
+		PlaySound((LPCSTR)IDR_WAVE_PICKUP, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+	else
+	{
+		if (PtInRect(&rectTipBox, ptPos))
+			manager->ShowOneHint();
+		else
+			if (manager->PtInRelease(ptPos))
+				OnRelease(0, 0, 0, bHandled);
+	}
+	return 0;
+}
+
+LRESULT MainWindow::OnShowMove(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	manager->ShowOneHint();
 	return 0;
 }
 
 LRESULT MainWindow::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	bOnDrag = false;
+	POINT ptPos;
+
+	ptPos.x = LOWORD(lParam);
+	ptPos.y = HIWORD(lParam);
+
+	if (manager->bOnThread)
+		return 0;
+
+	if (manager->OnLButtonUp(ptPos))
+	{
+		PlaySound((LPCSTR)IDR_WAVE_PUTDOWN, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+
+		if (manager->GetIsWon())
+			manager->Win();
+
+		RefreshMenu();
+
+	}
 	return 0;
-}
-
-bool MainWindow::PtInCard(POINT ptMouse, POINT ptCard)
-{
-	return (ptMouse.x >= ptCard.x && ptMouse.x <= ptCard.x + cardWidth &&
-		ptMouse.y >= ptCard.y && ptMouse.y <= ptCard.y + cardHeight);
-}
-
-bool MainWindow::GetPtOnCard(POINT ptMouse, int &col, int &row)
-{
-	col = -1, row = -1;
-	//for (auto it1 = vecCard.begin(); it1 != vecCard.end(); ++it1)
-	//{
-	//	for (auto it = it1->rbegin(); it != it1->rend(); ++it)
-	//	{
-	//		if (it->show && it->img != imgCardBack && PtInCard(ptMouse, it->pt))
-	//		{
-	//			col = it1 - vecCard.begin();
-	//			row = it1->size() - 1 - (it - it1->rbegin());
-	//			break;
-	//		}
-	//	}
-	//}
-	return (col != -1 && row != -1);
 }
 
 LRESULT MainWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -301,6 +418,12 @@ LRESULT MainWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 	ptPos.x = LOWORD(lParam);
 	ptPos.y = HIWORD(lParam);
+
+	if (manager->bOnThread)
+		return 0;
+
+	manager->OnMouseMove(ptPos);
+
 	return 0;
 }
 
@@ -318,7 +441,18 @@ LRESULT MainWindow::OnAuto(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 	DialogAuto dialogAuto(manager);
 	dialogAuto.DoModal();
 
+	if (manager->GetIsWon())
+		manager->Win();
+
 	RefreshMenu();
+
+	return 0;
+}
+
+LRESULT MainWindow::OnAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	DialogAbout dialogAbout;
+	dialogAbout.DoModal();
 
 	return 0;
 }

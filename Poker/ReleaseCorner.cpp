@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include <thread>
+#include "resource.h"
 #include "Card.h"
 #include "TImage.h"
 #include "SequentialAnimation.h"
@@ -23,9 +24,16 @@ bool ReleaseCorner::Do(Poker* inpoker)
 {
 	poker = inpoker;
 
+	//角落区没牌
 	if (poker->corner.empty())
 		return false;
 
+	//有空位不能发牌
+	for (auto& cards : poker->desk)
+		if (cards.empty())
+			return false;
+
+	//取得角落区坐标
 	if (poker->corner.back().back().HasImage())
 		ptStart = poker->corner.back().back().GetPos();
 
@@ -61,11 +69,14 @@ bool ReleaseCorner::Redo(Poker* inpoker)
 
 	poker = inpoker;
 
-	//
+	//撤销回收
 	if (restored)
 	{
 		restored->Redo(poker);
 	}
+
+	poker->score++;
+	poker->operation--;
 
 	//回收10张牌
 	vector<Card> temp;
@@ -89,6 +100,7 @@ bool ReleaseCorner::Redo(Poker* inpoker)
 
 void ReleaseCorner::StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
 {
+	assert(success);
 	//如果发生了回收事件，先恢复到回收前
 	if (restored)
 		restored->Redo(poker);
@@ -135,7 +147,7 @@ void ReleaseCorner::StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAni
 	int times = msAll / 125 + 1;
 	auto play = []()
 	{
-		PlaySound((LPCSTR)115, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+		PlaySound((LPCSTR)IDR_WAVE_DEAL, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
 	};
 	while (times--)
 	{
@@ -172,12 +184,17 @@ void ReleaseCorner::RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnim
 		//所有牌设置为发完牌的位置
 		card.SetPos(vecEndPos[i]);
 
+		//动画时设置为顶层
+		card.SetZIndex(999);
+
 		//从正面翻回背面
 		seq->Add(CardTurnOverAnimation::AddFrontToBackAnimation(card));
 
 		//动画：从角落到指定位置
 		seq->Add(new ValueAnimation<Card, POINT>(&card,25,&Card::SetPos,vecEndPos[i],vecStartPos[i]));
 
+		//恢复z-index
+		seq->Add(new SettingAnimation<Card, int>(&card, 0, &Card::SetZIndex, 0));
 	}
 
 	vecStartPos.clear();
@@ -188,7 +205,7 @@ void ReleaseCorner::RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnim
 	int times = msAll / 125 + 1;
 	auto play = []()
 	{
-		PlaySound((LPCSTR)115, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+		PlaySound((LPCSTR)IDR_WAVE_DEAL, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
 	};
 	while (times--)
 	{

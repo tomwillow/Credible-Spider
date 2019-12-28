@@ -78,7 +78,9 @@
     <ClCompile Include="Control\TCheckBox.cpp" />
     <ClCompile Include="Control\TControl.cpp" />
     <ClCompile Include="Control\tstring.cpp" />
+    <ClCompile Include="Dialog\DialogAbout.cpp" />
     <ClCompile Include="Dialog\DialogAuto.cpp" />
+    <ClCompile Include="Firework.cpp" />
     <ClCompile Include="Poker\CardTurnOverAnimation.cpp" />
     <ClCompile Include="Dialog\DialogChooseLevel.cpp" />
     <ClCompile Include="Animation\ParallelAnimation.cpp" />
@@ -107,6 +109,7 @@
     <ClInclude Include="Control\TControl.h" />
     <ClInclude Include="Control\tstring.h" />
     <ClInclude Include="Dialog\DialogAuto.h" />
+    <ClInclude Include="Firework.h" />
     <ClInclude Include="Poker\CardTurnOverAnimation.h" />
     <ClInclude Include="Dialog\DialogChooseLevel.h" />
     <ClInclude Include="POINT.h" />
@@ -134,6 +137,7 @@
     <Image Include="Resource\background.bmp" />
     <Image Include="Resource\cardback.bmp" />
     <Image Include="Resource\cardempty.bmp" />
+    <Image Include="Resource\cardmask.bmp" />
     <Image Include="Resource\card\CARD1.bmp" />
     <Image Include="Resource\card\CARD10.bmp" />
     <Image Include="Resource\card\CARD11.bmp" />
@@ -187,6 +191,7 @@
     <Image Include="Resource\card\CARD8.bmp" />
     <Image Include="Resource\card\CARD9.bmp" />
     <Image Include="Resource\icon.ico" />
+    <Image Include="Resource\Katze.ico" />
     <Image Include="Resource\suit_icon1.ico" />
     <Image Include="Resource\suit_icon2.ico" />
     <Image Include="Resource\suit_icon3.ico" />
@@ -197,6 +202,8 @@
   </ItemGroup>
   <ItemGroup>
     <Media Include="Resource\deal.wav" />
+    <Media Include="Resource\firework.wav" />
+    <Media Include="Resource\launch.wav" />
     <Media Include="Resource\no_tip.wav" />
     <Media Include="Resource\pickup.wav" />
     <Media Include="Resource\putdown.wav" />

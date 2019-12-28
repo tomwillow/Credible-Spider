@@ -90,6 +90,12 @@
     <ClCompile Include="Control\tstring.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Firework.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Dialog\DialogAbout.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
@@ -171,6 +177,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Dialog\DialogAuto.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Firework.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -360,6 +369,12 @@
     <Image Include="Resource\card\CARD52.bmp">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="Resource\Katze.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="Resource\cardmask.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="Resource\xp.manifest" />
@@ -381,6 +396,12 @@
       <Filter>资源文件</Filter>
     </Media>
     <Media Include="Resource\tip.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="Resource\firework.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="Resource\launch.wav">
       <Filter>资源文件</Filter>
     </Media>
   </ItemGroup>

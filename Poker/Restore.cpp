@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <thread>
+#include "resource.h"
 #include "Card.h"
 #include "TImage.h"
 #include "SequentialAnimation.h"
@@ -99,6 +100,7 @@ bool Restore::Do(Poker* inpoker)
 
 void Restore::StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
 {
+	PlaySound((LPCSTR)IDR_WAVE_DEAL, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
 	//刷新终点位置
 	SendMessage(hWnd, WM_SIZE, 0, 0);
 
@@ -141,11 +143,54 @@ void Restore::StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation
 		seq->Start(hWnd, bStopAnimation);
 		delete seq;
 		bOnAnimation = false;
-		SendMessage(hWnd, WM_SIZE, 0, 0);
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-		InvalidateRect(hWnd, &rc, false);
-		UpdateWindow(hWnd);
+}
+
+void Restore::RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
+{
+	//刷新终点位置
+	SendMessage(hWnd, WM_SIZE, 0, 0);
+
+	SequentialAnimation* seq = new SequentialAnimation;
+
+	//每个回收组
+	for (auto& oper : vecOper)
+	{
+
+		auto& cards = poker->desk[oper.origDeskIndex];
+		int sz = cards.size();
+
+		//先盖回去
+		if (oper.shownLastCard)
+		{
+			auto& card = cards[sz - 14];
+			seq->Add(CardTurnOverAnimation::AddFrontToBackAnimation(card));
+		}
+
+		//13-1
+		for (int i = sz - 13; i < sz; ++i)
+		{
+			auto& card = cards[i];
+
+			//设置起点
+			card.SetPos(oper.ptEnd);
+
+			//
+			card.SetZIndex(999 - i);
+
+			//移动
+			seq->Add(new ValueAnimation<Card, POINT>(&card, 25, &Card::SetPos,oper.ptEnd ,oper.vecStartPt[i] ));
+
+			//恢复z-index
+			seq->Add(new SettingAnimation<Card, int>(&card, 0, &Card::SetZIndex, 0));
+		}
+	}
+
+
+	bStopAnimation = false;
+	bOnAnimation = true;
+	seq->Start(hWnd, bStopAnimation);
+	delete seq;
+	bOnAnimation = false;
 }
 
 bool Restore::Redo(Poker* inpoker)

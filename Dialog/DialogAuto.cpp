@@ -9,7 +9,19 @@ LRESULT DialogAuto::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 {
 	btnStart.LinkControl(m_hWnd, IDC_BUTTON_START);
 	checkboxAnimation.LinkControl(m_hWnd, IDC_CHECK_ANIMATION);
-	CenterWindow();
+
+	RECT parentRect;
+	GetParent().GetClientRect(&parentRect);
+
+	RECT rect;
+	GetClientRect(&rect);
+
+	POINT dest = { 10,parentRect.bottom - rect.bottom - 10 };
+	::ClientToScreen(GetParent().m_hWnd, &dest);
+
+	SetWindowPos(HWND_TOPMOST, dest.x,dest.y, rect.right, rect.bottom,SWP_NOSIZE);
+
+	//CenterWindow();
 	return TRUE;    // let the system set the focus
 }
 
@@ -21,7 +33,10 @@ LRESULT DialogAuto::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 		PostMessage(WM_CLOSE);
 	}
 	else
+	{
+		::SetWindowText(GetParent().m_hWnd, "Credible Spider");
 		EndDialog(0);
+	}
 	return 0;
 }
 
@@ -30,7 +45,11 @@ LRESULT DialogAuto::OnBtnStart(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 	auto fun = [&]()
 	{
 		::SetWindowText(::GetDlgItem(m_hWnd, IDC_BUTTON_START),"停止");
-		manager->Command("auto "+to_string(checkboxAnimation.GetChecked()));
+		if (manager->Command("auto " + to_string(checkboxAnimation.GetChecked())))
+		{
+			//成功则自动退出
+			PostMessage(WM_CLOSE);
+		}
 		::SetWindowText(::GetDlgItem(m_hWnd, IDC_BUTTON_START), "开始");
 	};
 

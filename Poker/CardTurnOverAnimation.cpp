@@ -20,6 +20,9 @@ namespace CardTurnOverAnimation
 		//正面翻出来
 		ret.push_back(new ValueAnimation<TImage, double>(&card.GetImage(), 25, &TImage::SetIWidth, 0.0, 1.0));
 
+		//正面已经显示，可以恢复背面的iWidth
+		ret.push_back(new SettingAnimation<TImage, double>(&card.GetBackImage(), 0, &TImage::SetIWidth, 1.0));
+
 		return ret;
 	}
 
@@ -37,6 +40,9 @@ namespace CardTurnOverAnimation
 
 		//背面翻出来
 		ret.push_back(new ValueAnimation<TImage, double>(&card.GetBackImage(), 25, &TImage::SetIWidth, 0.0, 1.0));
+
+		//背面已经显示，可以恢复正面的iWidth
+		ret.push_back(new SettingAnimation<TImage, double>(&card.GetImage(), 0, &TImage::SetIWidth, 1.0));
 
 		return ret;
 

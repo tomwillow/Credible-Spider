@@ -50,6 +50,14 @@ LRESULT DialogAuto::OnBtnStart(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 			//成功则自动退出
 			PostMessage(WM_CLOSE);
 		}
+
+		stringstream ss;
+		ss << "求解结束。" << endl;
+		ss << "结果：" << (manager->autoSolveResult.success ? "成功" : "失败") << endl;
+		ss << "尝试次数：" << manager->autoSolveResult.calc;
+
+		MessageBox(ss.str().c_str(), "求解结果", MB_OK | MB_ICONINFORMATION);
+
 		::SetWindowText(::GetDlgItem(m_hWnd, IDC_BUTTON_START), "开始");
 		checkboxAnimation.SetEnable(true);
 	};

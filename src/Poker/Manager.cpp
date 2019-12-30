@@ -1,5 +1,6 @@
 #include "Manager.h"
 
+#include <assert.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -166,7 +167,8 @@ void Manager::NewGame(istream& in,bool isRandom)
 	action->Do(poker);
 
 #ifndef _CONSOLE
-	InitialImage();
+	if (idCardEmpty && idCardBack && idCard1 && idCardMask)
+		InitialImage();
 	if (poker->hasGUI)
 	{
 		SetWindowText(hWnd, (AppTitle + " 花色=" + to_string(suitNum) + " seed=" + to_string(seed)).c_str());
@@ -188,8 +190,6 @@ void Manager::NewGameSolved(istream& in)
 
 	bool canBeSolved = false;
 
-	int calc = 0;
-	bool success = false;
 	uint32_t seed;
 
 	default_random_engine e;
@@ -207,7 +207,7 @@ void Manager::NewGameSolved(istream& in)
 #ifndef _CONSOLE
 		SetWindowText(hWnd, (AppTitle + " 花色=" + to_string(suitNum) + " seed=" + to_string(seed)).c_str());
 #endif
-		if (success = AutoSolve(calc, false))
+		if (AutoSolve(false))
 		{
 			break;
 		}
@@ -218,8 +218,8 @@ void Manager::NewGameSolved(istream& in)
 	ss << "找到一组可解题目：" << endl << endl;
 	ss << "花色=" << suitNum << endl;
 	ss << "seed=" << seed << endl;
-	ss << "尝试次数=" << calc << endl;
-	ss << "难度=" << -10000.0 / calc + 100 << endl;
+	ss << "尝试次数=" << autoSolveResult.calc << endl;
+	ss << "难度=" << -10000.0 / autoSolveResult.calc + 100 << endl;
 
 	MessageBox(hWnd, ss.str().c_str(), "求解结果", MB_OK | MB_ICONINFORMATION);
 #endif
@@ -297,20 +297,11 @@ bool Manager::readIn(istream& in)
 
 		if (command == "auto")
 		{
-			int bPlayAnimation;
+			int bPlayAnimation=0;
 			in >> bPlayAnimation;
 
-			int calc = 0;
-			success = AutoSolve(calc, bPlayAnimation);
+			success = AutoSolve(bPlayAnimation);
 
-#ifndef _CONSOLE
-			stringstream ss;
-			ss << "求解结束。" << endl;
-			ss << "结果：" << (success ? "成功" : "失败") << endl;
-			ss << "尝试次数：" << calc;
-
-			MessageBox(hWnd, ss.str().c_str(), "求解结果", MB_OK | MB_ICONINFORMATION);
-#endif
 			break;
 			//continue;
 		}
@@ -747,14 +738,16 @@ bool Manager::dfs(bool& success, int& calc, const string& origTitle, vector<shar
 	return false;
 		}
 
-bool Manager::AutoSolve(int& calc, bool playAnimation)
+bool Manager::AutoSolve(bool playAnimation)
 {
 	bOnThread = true;
 	bStopThread = false;
 
 	unordered_set<Poker> states;
-	calc = 0;
-	bool success = false;
+	autoSolveResult.calc = 0;
+	autoSolveResult.success = false;
+	autoSolveResult.suit = poker->suitNum;
+	autoSolveResult.seed = poker->seed;
 
 	//1花色时，200可以解出70/100个；500可以解出89/100个；1000可以解出92/100个；8000可以解出98/100个
 	//2花色时，2000可以解出23/100个；8000可以解出32/100个
@@ -772,7 +765,7 @@ bool Manager::AutoSolve(int& calc, bool playAnimation)
 	string origTitle = "";
 #endif
 
-	dfs(success, calc, origTitle, record, states, stackLimited, calcLimited, playAnimation);
+	dfs(autoSolveResult.success, autoSolveResult.calc, origTitle, record, states, stackLimited, calcLimited, playAnimation);
 
 #ifndef _CONSOLE
 	SetWindowText(hWnd, origTitle.c_str());
@@ -798,8 +791,7 @@ bool Manager::AutoSolve(int& calc, bool playAnimation)
 	}
 #endif
 	bOnThread = false;
-	bStopThread = false;
-	return success;
+	return autoSolveResult.success;
 	}
 
 bool Manager::CanRedo()
@@ -814,6 +806,11 @@ void Manager::SetSoundId(int idTip, int idNoTip, int idWin)
 	soundTip = idTip;
 	soundNoTip = idNoTip;
 	soundWin = idWin;
+}
+
+void Manager::SetTextOutputHWND(HWND hWnd)
+{
+	this->hWnd = hWnd;
 }
 
 void Manager::SetGUIProperty(HWND hWnd, int idCardEmpty, int idCardBack, int idCard1, int idCardMask)
@@ -840,6 +837,8 @@ void Manager::SetGUIProperty(HWND hWnd, int idCardEmpty, int idCardBack, int idC
 
 void Manager::InitialImage()
 {
+	assert(idCardEmpty && idCardBack && idCard1 && idCardMask);
+
 	//每张牌加入图片
 	for (auto& vec : poker->desk)
 		for (auto& card : vec)

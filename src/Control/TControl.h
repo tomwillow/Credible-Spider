@@ -58,8 +58,8 @@ public:
 	void SetDouble(double d);
 	double GetDouble();
 
-	void SetEnable(bool bEnable);
-	bool GetEnable();
+	virtual void SetEnable(bool bEnable);
+	virtual bool GetEnable();
 
 	void SetID(int id);
 

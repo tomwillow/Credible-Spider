@@ -1,75 +1,50 @@
 #pragma once
 #include "stdafx.h"
+#include "TButton.h"
+#include "TEdit.h"
 #include "TCheckBox.h"
+#include "TRadioButtonGroup.h"
 
 class DialogChooseLevel:public CDialogImpl<DialogChooseLevel>
 {
 private:
-	int suit;
+	Manager manager;
+	//bool onThread,toStop;
+	TButton btnOK, btnCancel;
+	TEdit editSeed;
 	TCheckBox cbCanBeSolved;
+	TRadioButtonGroup rbGroupLevel;
+	TRadioButtonGroup rbGroupSeed;
 public:
+	struct DialogChooseLevelReturnType
+	{
+		bool isRandom;
+		int suit;
+		uint32_t seed;
+	}; 
+	DialogChooseLevelReturnType* ret;
+
 	enum { IDD = IDD_CHOOSE_LEVEL };
 
 	BEGIN_MSG_MAP(DialogChooseLevel)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_CLOSE, OnClose)
+		COMMAND_ID_HANDLER(IDC_RB_LEVEL1, OnPropertyChanged)
+		COMMAND_ID_HANDLER(IDC_RB_LEVEL2, OnPropertyChanged)
+		COMMAND_ID_HANDLER(IDC_RB_LEVEL4, OnPropertyChanged)
+		COMMAND_ID_HANDLER(IDC_RADIO_RANDOMSEED, OnPropertyChanged)
+		COMMAND_ID_HANDLER(IDC_RADIO_INPUTSEED, OnPropertyChanged)
 		MESSAGE_HANDLER(WM_COMMAND, OnCommand)
 	END_MSG_MAP()
 
-	DialogChooseLevel() :suit(0) {}
+	//DialogChooseLevel() :onThread(false),toStop(false) {}
 
-	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-	{
-		this->CheckRadioButton(IDC_RB_LEVEL1, IDC_RB_LEVEL4, IDC_RB_LEVEL1);
-		cbCanBeSolved.LinkControl(m_hWnd, IDC_CHECK_CANBESOLVED);
-		suit = 1;
-		CenterWindow();
-		return TRUE;    // let the system set the focus
-	}
+	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
-	LRESULT OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-	{
-		EndDialog(0);
-		return 0;
-	}
+	LRESULT OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
-	LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-	{
-		int id = LOWORD(wParam);
-		switch (id)
-		{
-		case IDC_RB_LEVEL1:suit = 1; break;
-		case IDC_RB_LEVEL2:suit = 2; break;
-		case IDC_RB_LEVEL4:suit = 4; break;
-		}
+	LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
-		if (suit == 4)
-		{
-			cbCanBeSolved.SetEnable(false);
-			cbCanBeSolved.SetChecked(false);
-		}
-		else
-		{
-			cbCanBeSolved.SetEnable(true);
-		}
-
-		switch (id)
-		{
-		case IDOK:
-		{
-			int canBeSolved = cbCanBeSolved.GetChecked();
-
-
-			EndDialog(MAKELONG(suit,canBeSolved ));//low,high
-			break;
-		}
-		case IDCANCEL:
-			EndDialog(0);
-			break;
-		}
-
-
-		return 0;
-	}
+	LRESULT OnPropertyChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 };
 

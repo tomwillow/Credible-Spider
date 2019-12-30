@@ -14,8 +14,8 @@ private:
 	std::shared_ptr<Manager> manager;
 
 	//
-	const int cardWidth = 71;
-	const int cardHeight = 96;
+	//const int cardWidth = 71;
+	//const int cardHeight = 96;
 	const int border = 10;
 	std::string textTipBox;
 	HBRUSH hBrushTipBox;

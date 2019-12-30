@@ -96,6 +96,12 @@
     <ClCompile Include="Control\TGroupBox.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Control\TEdit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\TRadioButtonGroup.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
@@ -180,6 +186,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Control\TGroupBox.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\TEdit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\TRadioButtonGroup.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

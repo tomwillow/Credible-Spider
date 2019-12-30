@@ -81,6 +81,7 @@
     <ClCompile Include="Control\TButton.cpp" />
     <ClCompile Include="Control\TCheckBox.cpp" />
     <ClCompile Include="Control\TControl.cpp" />
+    <ClCompile Include="Control\TEdit.cpp" />
     <ClCompile Include="Control\TGroupBox.cpp" />
     <ClCompile Include="Control\tstring.cpp" />
     <ClCompile Include="Dialog\DialogAbout.cpp" />
@@ -104,6 +105,7 @@
     <ClCompile Include="Poker\Poker.cpp" />
     <ClCompile Include="Poker\ReleaseCorner.cpp" />
     <ClCompile Include="TImage.cpp" />
+    <ClCompile Include="Control\TRadioButtonGroup.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation\AbstractAnimation.h" />
@@ -111,6 +113,7 @@
     <ClInclude Include="Control\TButton.h" />
     <ClInclude Include="Control\TCheckBox.h" />
     <ClInclude Include="Control\TControl.h" />
+    <ClInclude Include="Control\TEdit.h" />
     <ClInclude Include="Control\TGroupBox.h" />
     <ClInclude Include="Control\tstring.h" />
     <ClInclude Include="Dialog\DialogAuto.h" />
@@ -134,6 +137,7 @@
     <ClInclude Include="Poker\ReleaseCorner.h" />
     <ClInclude Include="TImage.h" />
     <ClInclude Include="Animation\ValueAnimation.h" />
+    <ClInclude Include="Control\TRadioButtonGroup.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Credible Spider.rc" />

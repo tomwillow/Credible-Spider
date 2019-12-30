@@ -205,13 +205,22 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 {
 	static bool bOpenDialog = true;
 	static int suit=0;
-	static int canBeSolved = 0;
+	static bool isRandom = true;
+	static uint32_t seed = 0;
 	if (bOpenDialog)
 	{
 		DialogChooseLevel dialogChooseLevel;
-		int ret = dialogChooseLevel.DoModal();
-		suit = LOWORD(ret);
-		canBeSolved = HIWORD(ret);
+		DialogChooseLevel::DialogChooseLevelReturnType *ret =(DialogChooseLevel::DialogChooseLevelReturnType*) dialogChooseLevel.DoModal();
+		if (ret)
+		{
+			isRandom = ret->isRandom;
+			suit = ret->suit;
+			seed = ret->seed;
+
+			delete ret;
+		}
+		else
+			suit = 0;
 	}
 	if (suit != 0)
 	{
@@ -229,11 +238,11 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 		{
 			EnableAllInput(false);
 
-			if (canBeSolved)
-				manager->Command("newsolved " + std::to_string(suit));
-			else
+			if (isRandom)
 				//随机新游戏
 				manager->Command("newrandom " + std::to_string(suit));
+			else
+				manager->Command("new " + std::to_string(suit)+" "+std::to_string(seed));
 
 			//若发牌途中退出
 			if (manager->bStopThread)

@@ -22,7 +22,7 @@ private:
 	bool CanPick(Poker* poker, std::istream& in);
 	void ReleaseRecord();
 
-	bool AutoSolve(int &calc,bool playAnimation);
+	bool AutoSolve(bool playAnimation);
 
 #ifndef _CONSOLE
 	bool hasLoadImage;
@@ -69,6 +69,20 @@ public:
 	~Manager();
 
 	const Poker* GetPoker() { return poker; }
+
+	struct AutoSolveResult
+	{
+		bool success;
+		int calc;
+		int suit;
+		uint32_t seed;
+	};
+	AutoSolveResult autoSolveResult;
+
+	//√¸¡Ó£∫
+	//new suit seed
+	//newrandom suit
+	//auto œ‘ æ∂Øª≠
 	bool Command(const std::string cmd);
 	bool readIn(std::istream& in);
 
@@ -77,6 +91,7 @@ public:
 	bool bStopThread;
 #ifndef _CONSOLE
 	void SetSoundId(int idTip,int idNoTip,int idWin);
+	void SetTextOutputHWND(HWND hWnd);
 	void SetGUIProperty(HWND hWnd, int idCardEmpty, int idCardBack, int idCard1,int idCardMask);
 
 	void OnSize(RECT rect);

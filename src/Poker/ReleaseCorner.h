@@ -14,8 +14,14 @@ private:
 
 	POINT ptStart;
 	std::vector<POINT> vecStartPos, vecEndPos;
+
+	bool enableSound;
+	int soundDeal;
 public:
-	ReleaseCorner() :Action(), success(false), restored(nullptr), ptStart({ 0,0 }) {}
+	ReleaseCorner(bool enableSound, int soundDeal) :Action(),
+		success(false), restored(nullptr), ptStart({ 0,0 }),
+		enableSound(enableSound), soundDeal(soundDeal)
+	{}
 
 	virtual ~ReleaseCorner() override;
 

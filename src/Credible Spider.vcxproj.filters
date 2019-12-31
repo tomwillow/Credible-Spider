@@ -105,7 +105,10 @@
     <ClCompile Include="Control\TStatic.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="DialogSearch.cpp">
+    <ClCompile Include="Dialog\DialogSearch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Configuration.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -203,7 +206,10 @@
     <ClInclude Include="Control\TStatic.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="DialogSearch.h">
+    <ClInclude Include="Dialog\DialogSearch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Configuration.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

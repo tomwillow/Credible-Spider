@@ -78,6 +78,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Animation\AbstractAnimation.cpp" />
+    <ClCompile Include="Configuration.cpp" />
     <ClCompile Include="Control\TButton.cpp" />
     <ClCompile Include="Control\TCheckBox.cpp" />
     <ClCompile Include="Control\TControl.cpp" />
@@ -85,7 +86,7 @@
     <ClCompile Include="Control\TGroupBox.cpp" />
     <ClCompile Include="Control\TStatic.cpp" />
     <ClCompile Include="Control\tstring.cpp" />
-    <ClCompile Include="DialogSearch.cpp" />
+    <ClCompile Include="Dialog\DialogSearch.cpp" />
     <ClCompile Include="Dialog\DialogAbout.cpp" />
     <ClCompile Include="Dialog\DialogAuto.cpp" />
     <ClCompile Include="Firework.cpp" />
@@ -112,6 +113,7 @@
   <ItemGroup>
     <ClInclude Include="Animation\AbstractAnimation.h" />
     <ClInclude Include="Animation\ParallelAnimation.h" />
+    <ClInclude Include="Configuration.h" />
     <ClInclude Include="Control\TButton.h" />
     <ClInclude Include="Control\TCheckBox.h" />
     <ClInclude Include="Control\TControl.h" />
@@ -119,7 +121,7 @@
     <ClInclude Include="Control\TGroupBox.h" />
     <ClInclude Include="Control\TStatic.h" />
     <ClInclude Include="Control\tstring.h" />
-    <ClInclude Include="DialogSearch.h" />
+    <ClInclude Include="Dialog\DialogSearch.h" />
     <ClInclude Include="Dialog\DialogAuto.h" />
     <ClInclude Include="Firework.h" />
     <ClInclude Include="Poker\CardTurnOverAnimation.h" />

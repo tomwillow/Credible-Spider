@@ -11,8 +11,6 @@
 class DialogChooseLevel:public CDialogImpl<DialogChooseLevel>
 {
 private:
-	std::vector<std::shared_ptr<Manager>> vecManager;
-	//bool onThread,toStop;
 	TButton btnOK, btnCancel;
 	TEdit editSeed;
 	TCheckBox cbCanBeSolved;
@@ -25,7 +23,7 @@ public:
 		int suit;
 		uint32_t seed;
 	}; 
-	DialogChooseLevelReturnType* ret;
+	std::shared_ptr<DialogChooseLevelReturnType> ret;
 
 	enum { IDD = IDD_CHOOSE_LEVEL };
 
@@ -40,8 +38,6 @@ public:
 		MESSAGE_HANDLER(WM_COMMAND, OnCommand)
 	END_MSG_MAP()
 
-	//DialogChooseLevel() :onThread(false),toStop(false) {}
-
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -49,8 +45,5 @@ public:
 	LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT OnPropertyChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-
-	bool IsManagerOnThread();
-	void StopManagerThread();
 };
 

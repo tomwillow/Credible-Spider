@@ -124,13 +124,13 @@ void ReleaseCorner::StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAni
 		card.SetVisible(true);
 
 		//第一张在最上面
-		card.SetZIndex(999-i);
+		card.SetZIndex(999 - i);
 
 		//动画：设置为可见
-		seq->Add(new SettingAnimation<Card, bool>(&card,0,&Card::SetVisible,true));
+		seq->Add(new SettingAnimation<Card, bool>(&card, 0, &Card::SetVisible, true));
 
 		//动画：从角落到指定位置
-		seq->Add(new ValueAnimation<Card,POINT>(&card,25,&Card::SetPos,ptStart,card.GetPos()));
+		seq->Add(new ValueAnimation<Card, POINT>(&card, 25, &Card::SetPos, ptStart, card.GetPos()));
 
 		vecStartPos.push_back(ptStart);
 		vecEndPos.push_back(card.GetPos());
@@ -138,39 +138,42 @@ void ReleaseCorner::StartAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAni
 		card.SetPos(ptStart);
 
 		//从背面翻出来
-		auto temp=CardTurnOverAnimation::AddBackToFrontAnimation(card);
+		auto temp = CardTurnOverAnimation::AddBackToFrontAnimation(card);
 		vecFinalAni.insert(vecFinalAni.end(), temp.begin(), temp.end());
 
 		//动画：恢复z-index
-		seq->Add(new SettingAnimation<Card, int>(&card,0,&Card::SetZIndex,0));
+		seq->Add(new SettingAnimation<Card, int>(&card, 0, &Card::SetZIndex, 0));
 	}
 
 	seq->Add(vecFinalAni);
 
-	//
-	int msAll = 75*10;
-	int times = msAll / 125 + 1;
-	auto play = []()
+	if (enableSound)
 	{
-		PlaySound((LPCSTR)IDR_WAVE_DEAL, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
-	};
-	while (times--)
-	{
-		thread t(play);
-		t.detach();
+		//
+		int msAll = 75 * 10;
+		int times = msAll / 125 + 1;
+		auto play = [&]()
+		{
+			PlaySound((LPCSTR)soundDeal, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+		};
+		while (times--)
+		{
+			thread t(play);
+			t.detach();
+		}
 	}
 
-		bStopAnimation = false;
-		bOnAnimation = true;
-		seq->Start(hWnd, bStopAnimation);
+	bStopAnimation = false;
+	bOnAnimation = true;
+	seq->Start(hWnd, bStopAnimation);
 
-		//如果在Do中发生了回收，此时再进行回收
-		if (restored)
-		{
-			restored->Do(poker);
-			restored->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
-		}
-		bOnAnimation = false;
+	//如果在Do中发生了回收，此时再进行回收
+	if (restored)
+	{
+		restored->Do(poker);
+		restored->StartAnimation(hWnd, bOnAnimation, bStopAnimation);
+	}
+	bOnAnimation = false;
 }
 
 void ReleaseCorner::RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnimation)
@@ -196,7 +199,7 @@ void ReleaseCorner::RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnim
 		seq->Add(CardTurnOverAnimation::AddFrontToBackAnimation(card));
 
 		//动画：从角落到指定位置
-		seq->Add(new ValueAnimation<Card, POINT>(&card,25,&Card::SetPos,vecEndPos[i],vecStartPos[i]));
+		seq->Add(new ValueAnimation<Card, POINT>(&card, 25, &Card::SetPos, vecEndPos[i], vecStartPos[i]));
 
 		//恢复z-index
 		seq->Add(new SettingAnimation<Card, int>(&card, 0, &Card::SetZIndex, 0));
@@ -218,15 +221,15 @@ void ReleaseCorner::RedoAnimation(HWND hWnd, bool& bOnAnimation, bool& bStopAnim
 		t.detach();
 	}
 
-		bStopAnimation = false;
-		bOnAnimation = true;
-		seq->Start(hWnd, bStopAnimation);
-		delete seq;
-		bOnAnimation = false;
-		SendMessage(hWnd, WM_SIZE, 0, 0);
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-		InvalidateRect(hWnd, &rc, false);
-		UpdateWindow(hWnd);
+	bStopAnimation = false;
+	bOnAnimation = true;
+	seq->Start(hWnd, bStopAnimation);
+	delete seq;
+	bOnAnimation = false;
+	SendMessage(hWnd, WM_SIZE, 0, 0);
+	RECT rc;
+	GetClientRect(hWnd, &rc);
+	InvalidateRect(hWnd, &rc, false);
+	UpdateWindow(hWnd);
 }
 #endif

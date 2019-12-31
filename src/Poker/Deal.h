@@ -11,8 +11,11 @@ private:
 	int suitNum;
 	uint32_t seed;
 	std::vector<Card> genInitCard() const;
+
+	bool enableSound;
+	int soundDeal;
 public:
-	Deal(int suitNum, uint32_t seed);
+	Deal(int suitNum, uint32_t seed,bool enableSound,int soundDeal);
 
 	virtual bool Do(Poker* inpoker) override;
 	virtual bool Redo(Poker* inpoker) override;

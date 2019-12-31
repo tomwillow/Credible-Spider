@@ -5,24 +5,18 @@
 
 #include <memory>
 
-#define TIMER_DEAL 1
-#define TIMER_DEAL_ELPS 10
-
 class MainWindow :public CWindowImpl<MainWindow, CWindow, CFrameWinTraits>
 {
 private:
 	std::shared_ptr<Manager> manager;
 
-	//
-	//const int cardWidth = 71;
-	//const int cardHeight = 96;
 	const int border = 10;
 	std::string textTipBox;
 	HBRUSH hBrushTipBox;
 	RECT rectTipBox;
 
 	TImage *imgBackground;
-
+	HDC hdcBackground;
 public:
 	bool doubleBuffer;
 	DECLARE_WND_CLASS(_T("Credible Spider Window"))
@@ -46,6 +40,8 @@ public:
 		COMMAND_ID_HANDLER(ID_AUTO, OnAuto)
 		COMMAND_ID_HANDLER(ID_ABOUT, OnAbout)
 		COMMAND_ID_HANDLER(ID_QUIT, OnQuit)
+		COMMAND_ID_HANDLER(ID_ENABLE_ANIMATION, OnSetOption)
+		COMMAND_ID_HANDLER(ID_ENABLE_SOUND, OnSetOption)
 	END_MSG_MAP()
 
 	MainWindow() :doubleBuffer(true), hBrushTipBox(0), imgBackground(nullptr) {}
@@ -77,4 +73,5 @@ public:
 	LRESULT MainWindow::OnAuto(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnQuit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT MainWindow::OnSetOption(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 };

@@ -17,7 +17,6 @@ private:
 
 	void NewGame(std::istream& in,bool isRandom);
 	void NewGameSolved(std::istream& in);
-	void showHelpInfo() const;
 	bool Move(Poker* poker, std::istream& in);
 	bool CanPick(Poker* poker, std::istream& in);
 	void ReleaseRecord();
@@ -28,7 +27,7 @@ private:
 	bool hasLoadImage;
 	HWND hWnd;
 	int idCardEmpty, idCardBack, idCard1,idCardMask;
-	int soundTip, soundNoTip,soundWin;
+	int soundTip, soundNoTip,soundWin,soundDeal;
 	std::vector<TImage*> vecImgCardEmpty;
 	const int border = 10;
 	const int xBorder = 15;//finished
@@ -49,7 +48,9 @@ private:
 	POINT GetCardEmptyPoint(RECT rect, int index);
 	void GetIndexFromPoint(int& deskIndex, int& cardIndex, POINT pt);
 	void InitialImage();
-
+	void RefreshPaint();
+#else
+	void ShowHelpInfo() const;
 #endif
 	struct Node
 	{
@@ -61,14 +62,20 @@ private:
 	//emptyIndex传入空数组即可，调用完成会将空牌位索引加入
 	//若某一操作后与states中已有的状态重合，则此操作不会加入actions
 	std::vector<Manager::Node> GetAllOperator(std::vector<int>& emptyIndex, std::shared_ptr<Poker> poker, const std::unordered_set<Poker>& states);
-	bool dfs(bool& success, int& calc, const std::string& origTitle, std::vector<std::shared_ptr<Action>>& record, std::unordered_set<Poker>& states, int stackLimited, int calcLimited, bool playAnimation);
+	bool DFS(bool& success, int& calc, const std::string& origTitle, std::vector<std::shared_ptr<Action>>& record, std::unordered_set<Poker>& states, int stackLimited, int calcLimited, bool playAnimation);
 public:
 	Manager();
 	Manager(int suitNum);
 	Manager(int suitNum, uint32_t seed);
 	~Manager();
 
-	const Poker* GetPoker() { return poker; }
+	int GetPokerSuitNum() { return poker->suitNum; };
+	int GetPokerOperation() { return poker->operation; };
+	int GetPokerScore() { return poker->score; };
+	uint32_t GetPokerSeed() { return poker->seed; };
+	bool HasPoker() { return poker; };
+	bool PokerCornerIsEmpty() { return poker->corner.empty(); }
+	//const Poker* GetPoker() { return poker; }
 
 	struct AutoSolveResult
 	{
@@ -84,13 +91,13 @@ public:
 	//newrandom suit
 	//auto 显示动画
 	bool Command(const std::string cmd);
-	bool readIn(std::istream& in);
+	bool ReadIn(std::istream& in);
 
 	//
 	bool bOnThread;
 	bool bStopThread;
 #ifndef _CONSOLE
-	void SetSoundId(int idTip,int idNoTip,int idWin);
+	void SetSoundId(int idTip,int idNoTip,int idWin,int idDeal);
 	void SetTextOutputHWND(HWND hWnd);
 	void SetGUIProperty(HWND hWnd, int idCardEmpty, int idCardBack, int idCard1,int idCardMask);
 

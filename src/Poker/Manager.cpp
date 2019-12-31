@@ -28,6 +28,10 @@
 #include "ValueAnimation.h"
 #include "SettingAnimation.h"
 #include "ValueAnimation.h"
+
+#include "Configuration.h"
+extern Configuration config;
+
 #endif
 
 #include <thread>
@@ -48,28 +52,29 @@ dragInfo()
 
 Manager::Manager(int suitNum) : Manager()
 {
-	poker = new Poker;
+	//poker = new Poker;
 
-	static default_random_engine e;
-	e.seed(e()+GetTickCount());
-	uint32_t seed = e();
+	//static default_random_engine e;
+	//e.seed(e()+GetTickCount());
+	//uint32_t seed = e();
 
-	Deal deal(suitNum, seed);
-	deal.Do(poker);
+	//Deal deal(suitNum, seed);
+	//deal.Do(poker);
 
-	cout << *poker;
-
+	//cout << *poker;
+	Command("newrandom " + to_string(suitNum));
 }
 
 Manager::Manager(int suitNum, uint32_t seed) :Manager()
 {
-	poker = new Poker;
+	//poker = new Poker;
 
-	Deal deal(suitNum, seed);
-	deal.Do(poker);
+	//Deal deal(suitNum, seed);
+	//deal.Do(poker);
 
-	cout << *poker;
+	//cout << *poker;
 
+	Command("new " + to_string(suitNum) + " " + to_string(seed));
 }
 
 Manager::~Manager()
@@ -125,16 +130,17 @@ bool Manager::Move(Poker* poker, istream& in)
 #ifndef _CONSOLE
 	if (success && poker->hasGUI)
 	{
-		action->StartAnimationQuick(hWnd, bOnThread, bStopThread);
-}
+		if (config.enableAnimation)
+			action->StartAnimationQuick(hWnd, bOnThread, bStopThread);
+	}
 #else
 	cout << (success ? "success." : "failed.") << endl;
-
+	cout << *poker;
 #endif
 	return false;
 }
 
-void Manager::NewGame(istream& in,bool isRandom)
+void Manager::NewGame(istream& in, bool isRandom)
 {
 
 	int suitNum;
@@ -150,8 +156,8 @@ void Manager::NewGame(istream& in,bool isRandom)
 	{
 		in >> suitNum;
 
-		default_random_engine e;
-		e.seed(GetTickCount());
+		static default_random_engine e;
+		e.seed(e() + GetTickCount());
 		seed = e();
 	}
 	else
@@ -163,7 +169,7 @@ void Manager::NewGame(istream& in,bool isRandom)
 	delete poker;
 	poker = new Poker;
 
-	shared_ptr<Action> action(new Deal(suitNum, seed));
+	shared_ptr<Action> action(new Deal(suitNum, seed, config.enableSound, soundDeal));
 	action->Do(poker);
 
 #ifndef _CONSOLE
@@ -171,9 +177,16 @@ void Manager::NewGame(istream& in,bool isRandom)
 		InitialImage();
 	if (poker->hasGUI)
 	{
-		SetWindowText(hWnd, (AppTitle + " 花色=" + to_string(suitNum) + " seed=" + to_string(seed)).c_str());
-		action->StartAnimation(hWnd, bOnThread, bStopThread);
+		SetWindowText(hWnd, (AppTitle + " 花色=" + to_string(suitNum) + " 种子=" + to_string(seed)).c_str());
+		if (config.enableAnimation)
+			action->StartAnimation(hWnd, bOnThread, bStopThread);
+		else
+		{
+			RefreshPaint();
+		}
 	}
+#else
+	cout << *poker;
 #endif
 }
 
@@ -201,7 +214,7 @@ void Manager::NewGameSolved(istream& in)
 		poker = new Poker;
 
 		seed = e();
-		shared_ptr<Action> action(new Deal(suitNum, seed));
+		shared_ptr<Action> action(new Deal(suitNum, seed, config.enableSound, soundDeal));
 		action->Do(poker);
 
 #ifndef _CONSOLE
@@ -230,10 +243,11 @@ void Manager::NewGameSolved(istream& in)
 bool Manager::Command(const string command)
 {
 	istringstream iss(command);
-	return readIn(iss);
+	return ReadIn(iss);
 }
 
-void Manager::showHelpInfo() const
+#ifdef _CONSOLE
+void Manager::ShowHelpInfo() const
 {
 	if (!poker)
 	{
@@ -261,10 +275,13 @@ void Manager::showHelpInfo() const
 		cout << "--Help End--" << endl << endl;
 	}
 }
+#endif
 
-bool Manager::readIn(istream& in)
+bool Manager::ReadIn(istream& in)
 {
-	showHelpInfo();
+#ifdef _CONSOLE
+	ShowHelpInfo();
+#endif
 	string command;
 	bool success = true;
 	while (1)
@@ -275,14 +292,12 @@ bool Manager::readIn(istream& in)
 
 		if (command == "new")
 		{
-			NewGame(in,false);
-			cout << *poker;
+			NewGame(in, false);
 			continue;
 		}
 		if (command == "newrandom")
 		{
-			NewGame(in,true);
-			cout << *poker;
+			NewGame(in, true);
 			continue;
 		}
 		if (command == "newsolved")
@@ -297,7 +312,7 @@ bool Manager::readIn(istream& in)
 
 		if (command == "auto")
 		{
-			int bPlayAnimation=0;
+			int bPlayAnimation = 0;
 			in >> bPlayAnimation;
 
 			success = AutoSolve(bPlayAnimation);
@@ -318,16 +333,16 @@ bool Manager::readIn(istream& in)
 			}
 			continue;
 		}
+#ifdef _CONSOLE
 		if (command == "h")
 		{
 			showHelpInfo();
 			continue;
 		}
+#endif
 		if (command == "m")
 		{
 			success = Move(poker, in);
-
-			cout << *poker;
 			continue;
 		}
 		if (command == "pick")
@@ -342,12 +357,12 @@ bool Manager::readIn(istream& in)
 		}
 		if (command == "r")//release
 		{
-			shared_ptr<Action> action(new ReleaseCorner());
+			shared_ptr<Action> action(new ReleaseCorner(config.enableSound, soundDeal));
 			if (success = action->Do(poker))
 			{
 				record.push_back(action);
 #ifndef _CONSOLE
-				if (poker->hasGUI)
+				if (poker->hasGUI && config.enableAnimation)
 				{
 					action->StartAnimation(hWnd, bOnThread, bStopThread);
 				}
@@ -383,8 +398,10 @@ bool Manager::readIn(istream& in)
 				cout << *poker;
 #endif
 			}
+#ifdef _CONSOLE
 			else
 				cout << "Can't redo." << endl;
+#endif
 			continue;
 		}
 		if (command == "save")
@@ -397,14 +414,6 @@ bool Manager::readIn(istream& in)
 			ofs.close();
 			continue;
 		}
-		if (command == "test")
-		{
-			vector<string> vs;
-			for (auto& r : record)
-				vs.push_back(r->GetCommand());
-
-			continue;
-		}
 		if (command == "exit")
 		{
 			break;
@@ -413,9 +422,9 @@ bool Manager::readIn(istream& in)
 		cout << "Unknowned Command" << endl;
 		throw "Error:Unknowned Command";
 		//cout << ">>";
-		}
-	return success;
 	}
+	return success;
+}
 
 std::vector<Manager::Node> Manager::GetAllOperator(std::vector<int>& emptyIndex, std::shared_ptr<Poker> poker, const unordered_set<Poker>& states)
 {
@@ -526,14 +535,14 @@ std::vector<Manager::Node> Manager::GetAllOperator(std::vector<int>& emptyIndex,
 	if (emptyIndex.empty() && !poker->corner.empty())
 	{
 		shared_ptr<Poker> newPoker(new Poker(*poker));
-		shared_ptr<Action> action(new ReleaseCorner());
+		shared_ptr<Action> action(new ReleaseCorner(config.enableSound, soundDeal));
 		action->Do(newPoker.get());
 		actions.push_back({ poker->GetValue() - 100,newPoker,action });
 	}
 	return actions;
 }
 
-bool Manager::dfs(bool& success, int& calc, const string& origTitle, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited, bool playAnimation)
+bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited, bool playAnimation)
 {
 	if (poker->isFinished())
 	{
@@ -692,7 +701,7 @@ bool Manager::dfs(bool& success, int& calc, const string& origTitle, vector<shar
 			//push记录
 			record.push_back(node.action);
 
-			if (dfs(success, calc, origTitle, record, states, stackLimited, calcLimited, playAnimation))
+			if (DFS(success, calc, origTitle, record, states, stackLimited, calcLimited, playAnimation))
 			{
 				//只有终止才会返回true，如果任意位置返回true，此处将逐级终止递归
 				ReleaseActions(actions);
@@ -722,7 +731,7 @@ bool Manager::dfs(bool& success, int& calc, const string& origTitle, vector<shar
 			record.pop_back();
 
 			it++;
-				}
+		}
 		else//已出现过的状态
 		{
 #ifdef _PRINT
@@ -732,11 +741,11 @@ bool Manager::dfs(bool& success, int& calc, const string& origTitle, vector<shar
 			//直接转到下一个操作
 			it = actions.erase(it);
 		}
-			}
+	}
 
 	ReleaseActions(actions);
 	return false;
-		}
+}
 
 bool Manager::AutoSolve(bool playAnimation)
 {
@@ -765,7 +774,7 @@ bool Manager::AutoSolve(bool playAnimation)
 	string origTitle = "";
 #endif
 
-	dfs(autoSolveResult.success, autoSolveResult.calc, origTitle, record, states, stackLimited, calcLimited, playAnimation);
+	DFS(autoSolveResult.success, autoSolveResult.calc, origTitle, record, states, stackLimited, calcLimited, playAnimation);
 
 #ifndef _CONSOLE
 	SetWindowText(hWnd, origTitle.c_str());
@@ -779,7 +788,7 @@ bool Manager::AutoSolve(bool playAnimation)
 		cout << "Finished. Step = " << record.size() << endl;
 		for (int i = 0; i < record.size(); ++i)
 			cout << "[" << i << "] " << *record[i] << endl;
-}
+	}
 	else
 	{
 		//输出失败原因
@@ -792,7 +801,7 @@ bool Manager::AutoSolve(bool playAnimation)
 #endif
 	bOnThread = false;
 	return autoSolveResult.success;
-	}
+}
 
 bool Manager::CanRedo()
 {
@@ -801,11 +810,12 @@ bool Manager::CanRedo()
 
 
 #ifndef _CONSOLE
-void Manager::SetSoundId(int idTip, int idNoTip, int idWin)
+void Manager::SetSoundId(int idTip, int idNoTip, int idWin, int idDeal)
 {
 	soundTip = idTip;
 	soundNoTip = idNoTip;
 	soundWin = idWin;
+	soundDeal = idDeal;
 }
 
 void Manager::SetTextOutputHWND(HWND hWnd)
@@ -1010,14 +1020,14 @@ void Manager::Draw(HDC hdc, const RECT& rect)
 			//烟花变少则补充
 			while (fireworks.size() < fireworkNum)
 			{
-				fireworks.push_back(make_shared<Firework>(rect.right, rect.bottom));
+				fireworks.push_back(make_shared<Firework>(rect.right, rect.bottom, config.enableSound, IDR_WAVE_FIREWORK));
 			}
 
 			for (auto& f : fireworks)
 			{
 				//烟花放完，用新烟花替换
 				if (f->IsDead())
-					f = make_shared<Firework>(rect.right, rect.bottom);
+					f = make_shared<Firework>(rect.right, rect.bottom, config.enableSound, IDR_WAVE_FIREWORK);
 				f->Draw(hdc);
 			}
 		}
@@ -1046,11 +1056,13 @@ bool Manager::ShowOneHint()
 	if (actions.empty() ||
 		(actions.size() == 1 && typeid(*actions.front().action) == typeid(ReleaseCorner)))
 	{
-		PlaySound((LPCSTR)soundNoTip, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+		if (config.enableSound)
+			PlaySound((LPCSTR)soundNoTip, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
 		return false;
 	}
 
-	PlaySound((LPCSTR)soundTip, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+	if (config.enableSound)
+		PlaySound((LPCSTR)soundTip, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
 
 	//按照评估分大到小排序
 	sort(actions.begin(), actions.end(), [](const Node& n1, const Node& n2) {return n1.value > n2.value; });
@@ -1269,9 +1281,18 @@ bool Manager::GetIsWon()
 	return poker->isFinished();
 }
 
+void Manager::RefreshPaint()
+{
+	RECT rect;
+	GetClientRect(hWnd, &rect);
+	OnSize(rect);
+	InvalidateRect(hWnd, &rect, false);
+}
+
 void Manager::Win()
 {
-	PlaySound((LPCSTR)soundWin, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+	if (config.enableSound)
+		PlaySound((LPCSTR)soundWin, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
 
 	record.clear();
 

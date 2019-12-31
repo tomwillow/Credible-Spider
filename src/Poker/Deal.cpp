@@ -18,7 +18,8 @@
 
 using namespace std;
 
-Deal::Deal(int suitNum, uint32_t seed) :Action(), suitNum(suitNum), seed(seed)
+Deal::Deal(int suitNum, uint32_t seed, bool enableSound, int soundDeal) :Action(), 
+suitNum(suitNum), seed(seed),enableSound(enableSound),soundDeal(soundDeal)
 {
 
 }
@@ -164,17 +165,20 @@ void Deal::StartAnimation(HWND hWnd,bool &bOnAnimation,bool &bStopAnimation)
 
 	seq->Add(vecFinal);
 
-	//
-	int msAll = 25 * 54+50*10 ;
-	int times = msAll / 125+1;
-	auto play = []()
+	if (enableSound)
 	{
-		PlaySound((LPCSTR)IDR_WAVE_DEAL, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
-	};
-	while (times--)
-	{
-		thread t(play);
-		t.detach();
+		//
+		int msAll = 25 * 54 + 50 * 10;
+		int times = msAll / 125 + 1;
+		auto play = [&]()
+		{
+			PlaySound((LPCSTR)soundDeal, GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+		};
+		while (times--)
+		{
+			thread t(play);
+			t.detach();
+		}
 	}
 
 	bOnAnimation = true;

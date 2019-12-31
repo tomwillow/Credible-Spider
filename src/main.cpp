@@ -2,6 +2,7 @@
 
 #include "MainWindow.h"
 #include "Resource.h"
+#include "Configuration.h"
 #include <string>
 
 CComModule _Module;
@@ -9,6 +10,7 @@ CComModule _Module;
 using namespace std;
 
 const string AppTitle = "Credible Spider v1.0";
+Configuration config;
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hInstPrev,
 	LPSTR szCmdLine, int nCmdShow)

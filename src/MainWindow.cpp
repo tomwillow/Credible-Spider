@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 
+#include "Configuration.h"
 #include "DialogChooseLevel.h"
 #include "DialogAuto.h"
 #include "DialogAbout.h"
@@ -7,7 +8,11 @@
 #pragma comment(lib,"winmm.lib")
 
 #include <thread>
+
 using namespace std;
+
+extern Configuration config;
+const string savFileName = "credible spider.sav";
 
 void DrawTextAdvance(HDC hdc, const TCHAR text[], RECT *rect, long FontSize, int FontWeight, COLORREF color, const TCHAR FontName[], UINT format, int cEscapement = 0, int cOrientation = 0)
 {
@@ -50,13 +55,24 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	HICON hIcon = LoadIcon(_Module.GetResourceInstance(), MAKEINTRESOURCE(IDI_ICON));
 	SetIcon(hIcon, FALSE);
 
+	//设置背景
 	imgBackground = new TImage(GetModuleHandle(NULL), IDB_BACKGROUND);
 
+	//提示框
+	hBrushTipBox = CreateSolidBrush(crTipBox);
+
+	//初始化manager
 	manager = make_shared<Manager>();
-	manager->SetSoundId(IDR_WAVE_TIP, IDR_WAVE_NOTIP,IDR_WAVE_SUCCESS);
+	manager->SetSoundId(IDR_WAVE_TIP, IDR_WAVE_NOTIP,IDR_WAVE_SUCCESS,IDR_WAVE_DEAL);
 	manager->SetGUIProperty(m_hWnd, IDB_CARDEMPTY, IDB_CARDBACK, IDB_CARD1,IDB_CARDMASK);
 
-	hBrushTipBox = CreateSolidBrush(crTipBox);
+	if (config.LoadFromFile(savFileName)==false)
+	{
+		config.enableAnimation = false;
+		config.enableSound = true;
+	}  
+	CheckMenuItem(GetMenu(), ID_ENABLE_ANIMATION, config.enableAnimation ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(GetMenu(), ID_ENABLE_SOUND, config.enableSound ? MF_CHECKED : MF_UNCHECKED);
 
 	RefreshMenu();
 
@@ -94,7 +110,11 @@ LRESULT MainWindow::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 			break;
 		}
 		else
+		{
+			if (config.SaveToFile(savFileName) == false)
+				MessageBox(("保存配置文件 " + savFileName + " 失败.").c_str(), "出错", MB_OK | MB_ICONERROR);
 			DestroyWindow();
+		}
 	}
 	case IDCANCEL:
 		break;
@@ -117,10 +137,10 @@ void MainWindow::Draw(HDC hdc, const RECT &rect)
 	imgBackground->Fill(hdc, rect);
 
 	//TipBox
-	if (manager->GetPoker())
+	if (manager->HasPoker())
 	{
-		textTipBox = "分数：" + std::to_string(manager->GetPoker()->score) + "\r\n";
-		textTipBox += "操作：" + std::to_string(manager->GetPoker()->operation);
+		textTipBox = "分数：" + std::to_string(manager->GetPokerScore()) + "\r\n";
+		textTipBox += "操作：" + std::to_string(manager->GetPokerOperation());
 	}
 
 	SelectObject(hdc, hBrushTipBox);
@@ -192,7 +212,7 @@ LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 		EnableAllInput(false);
 
 		//洗牌
-		manager->Command("new " + std::to_string(manager->GetPoker()->suitNum) + " " + std::to_string(manager->GetPoker()->seed));
+		manager->Command("new " + std::to_string(manager->GetPokerSuitNum()) + " " + std::to_string(manager->GetPokerSeed()));
 
 		EnableAllInput(true);
 
@@ -210,14 +230,12 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	if (bOpenDialog)
 	{
 		DialogChooseLevel dialogChooseLevel;
-		DialogChooseLevel::DialogChooseLevelReturnType *ret =(DialogChooseLevel::DialogChooseLevelReturnType*) dialogChooseLevel.DoModal();
-		if (ret)
+		dialogChooseLevel.DoModal();
+		if (dialogChooseLevel.ret)
 		{
-			isRandom = ret->isRandom;
-			suit = ret->suit;
-			seed = ret->seed;
-
-			delete ret;
+			isRandom = dialogChooseLevel.ret->isRandom;
+			suit = dialogChooseLevel.ret->suit;
+			seed = dialogChooseLevel.ret->seed;
 		}
 		else
 			suit = 0;
@@ -261,7 +279,7 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 
 void MainWindow::RefreshMenu()
 {
-	if (manager->GetPoker())
+	if (manager->HasPoker())
 	{
 		EnableMenuItem(GetMenu(), ID_RENEW_GAME, MF_ENABLED);//重新开始新游戏
 	}
@@ -270,27 +288,29 @@ void MainWindow::RefreshMenu()
 		EnableMenuItem(GetMenu(), ID_RENEW_GAME, MF_GRAYED);
 	}
 
-	if (manager->GetPoker() && !manager->GetIsWon())
+	if (manager->HasPoker() && !manager->GetIsWon())
 	{
-		EnableMenuItem(GetMenu(), ID_AUTO, MF_ENABLED);
-		EnableMenuItem(GetMenu(), ID_SHOWMOVE, MF_ENABLED);
+		EnableMenuItem(GetMenu(), ID_AUTO, MF_ENABLED);//启用自动翻牌
+		EnableMenuItem(GetMenu(), ID_SHOWMOVE, MF_ENABLED);//启用显示可移动
+		EnableMenuItem(GetMenu(), ID_SAVE, MF_ENABLED);//
 	}
 	else
 	{
 		EnableMenuItem(GetMenu(), ID_AUTO, MF_GRAYED);
 		EnableMenuItem(GetMenu(), ID_SHOWMOVE, MF_GRAYED);
+		EnableMenuItem(GetMenu(), ID_SAVE, MF_GRAYED);//
 	}
 
 	//刷新 撤销 命令
 	if (manager->CanRedo())
-		EnableMenuItem(GetMenu(), ID_REDO, MF_ENABLED);
+		EnableMenuItem(GetMenu(), ID_REDO, MF_ENABLED);//启用撤销
 	else
 		EnableMenuItem(GetMenu(), ID_REDO, MF_GRAYED);
 
 	//刷新 发牌 命令
-	if (manager->GetPoker() && !manager->GetPoker()->corner.empty())
+	if (manager->HasPoker() && !manager->PokerCornerIsEmpty())
 	{
-		EnableMenuItem(GetMenu(), ID_RELEASE, MF_ENABLED);
+		EnableMenuItem(GetMenu(), ID_RELEASE, MF_ENABLED);//启用发牌
 		EnableMenuItem(GetMenu(), ID_RELEASE2, MF_ENABLED);
 	}
 	else
@@ -383,14 +403,17 @@ LRESULT MainWindow::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	ptPos.x = LOWORD(lParam);
 	ptPos.y = HIWORD(lParam);
 
-	if (!manager->GetPoker())
+	if (!manager->HasPoker())
 		return 0;
 
 	if (manager->bOnThread)
 		return 0;
 
 	if (manager->OnLButtonDown(ptPos))
-		PlaySound((LPCSTR)IDR_WAVE_PICKUP, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+	{
+		if (config.enableSound)
+			PlaySound((LPCSTR)IDR_WAVE_PICKUP, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+	}
 	else
 	{
 		if (PtInRect(&rectTipBox, ptPos))
@@ -421,6 +444,7 @@ LRESULT MainWindow::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 	if (manager->OnLButtonUp(ptPos))
 	{
+		if (config.enableSound)
 		PlaySound((LPCSTR)IDR_WAVE_PUTDOWN, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
 
 		if (manager->GetIsWon())
@@ -482,5 +506,26 @@ LRESULT MainWindow::OnQuit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 {
 	SendMessage(WM_CLOSE);
 
+	return 0;
+}
+
+LRESULT MainWindow::OnSetOption(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+
+	UINT state = GetMenuState(GetMenu(), wID, MF_BYCOMMAND);
+	if (state & MF_CHECKED)
+		state = MF_UNCHECKED;
+	else
+		state = MF_CHECKED;
+	CheckMenuItem(GetMenu(), wID, state);
+	switch (wID)
+	{
+	case ID_ENABLE_ANIMATION:
+		config.enableAnimation = state & MF_CHECKED;
+		break;
+	case ID_ENABLE_SOUND:
+		config.enableSound = state & MF_CHECKED;
+		break;
+	}
 	return 0;
 }

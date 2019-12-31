@@ -22,6 +22,10 @@ private:
 	//e为静态函数，避免调用时时间一样产生一样的随机数
 	static std::default_random_engine e;
 
+	//
+	bool enableSound;
+	int soundFirework;
+
 	//整体死亡：火箭、烟花均已显示完
 	bool dead;
 
@@ -52,7 +56,8 @@ private:
 	std::vector<Ball> balls;
 	std::chrono::time_point<std::chrono::high_resolution_clock> boomTime;//粒子爆炸时刻
 public:
-	Firework(float width, float height) :W(width), H(height), boom(false), dead(false)
+	Firework(float width, float height,bool enableSound,int soundFirework) :W(width), H(height),
+		enableSound(enableSound),soundFirework(soundFirework), boom(false), dead(false)
 	{
 		using namespace std::chrono;
 		startTime = high_resolution_clock::now();
@@ -132,8 +137,9 @@ public:
 			//火箭已经到达顶点
 			if (vy <= 0)
 			{
+				if (enableSound)
 				//爆炸音效
-				PlaySound((LPCSTR)IDR_WAVE_FIREWORK, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+				PlaySound((LPCSTR)soundFirework, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
 
 				//设置开始爆炸
 				boom = true;

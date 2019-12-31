@@ -83,7 +83,9 @@
     <ClCompile Include="Control\TControl.cpp" />
     <ClCompile Include="Control\TEdit.cpp" />
     <ClCompile Include="Control\TGroupBox.cpp" />
+    <ClCompile Include="Control\TStatic.cpp" />
     <ClCompile Include="Control\tstring.cpp" />
+    <ClCompile Include="DialogSearch.cpp" />
     <ClCompile Include="Dialog\DialogAbout.cpp" />
     <ClCompile Include="Dialog\DialogAuto.cpp" />
     <ClCompile Include="Firework.cpp" />
@@ -115,7 +117,9 @@
     <ClInclude Include="Control\TControl.h" />
     <ClInclude Include="Control\TEdit.h" />
     <ClInclude Include="Control\TGroupBox.h" />
+    <ClInclude Include="Control\TStatic.h" />
     <ClInclude Include="Control\tstring.h" />
+    <ClInclude Include="DialogSearch.h" />
     <ClInclude Include="Dialog\DialogAuto.h" />
     <ClInclude Include="Firework.h" />
     <ClInclude Include="Poker\CardTurnOverAnimation.h" />

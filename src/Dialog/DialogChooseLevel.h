@@ -5,10 +5,13 @@
 #include "TCheckBox.h"
 #include "TRadioButtonGroup.h"
 
+#include <vector>
+#include <memory>
+
 class DialogChooseLevel:public CDialogImpl<DialogChooseLevel>
 {
 private:
-	Manager manager;
+	std::vector<std::shared_ptr<Manager>> vecManager;
 	//bool onThread,toStop;
 	TButton btnOK, btnCancel;
 	TEdit editSeed;
@@ -46,5 +49,8 @@ public:
 	LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT OnPropertyChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
+	bool IsManagerOnThread();
+	void StopManagerThread();
 };
 

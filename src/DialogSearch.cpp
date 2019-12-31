@@ -1,4 +1,4 @@
-#include "DialogChooseLevel.h"
+#include "DialogSearch.h"
 
 #include "Manager.h"
 #include "TStatic.h"
@@ -7,22 +7,9 @@
 
 using namespace std;
 
-LRESULT DialogChooseLevel::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT DialogSearch::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	ret = new DialogChooseLevelReturnType{ true,0,0 };
-
-	editSeed.LinkControl(m_hWnd, IDC_EDIT_SEED);
-	editSeed.SetEnable(false);
-
-	cbCanBeSolved.LinkControl(m_hWnd, IDC_CHECK_CANBESOLVED);
-
-	rbGroupLevel.LinkControl(m_hWnd, { IDC_RB_LEVEL1,IDC_RB_LEVEL2, IDC_RB_LEVEL4 }, { 1,2,4 });
-	rbGroupLevel.SetChecked(IDC_RB_LEVEL1);
-
-	rbGroupSeed.LinkControl(m_hWnd, { IDC_RADIO_RANDOMSEED,IDC_RADIO_INPUTSEED }, { 1,0 });
-	rbGroupSeed.SetChecked(IDC_RADIO_RANDOMSEED);
-
-	btnOK.LinkControl(m_hWnd, IDOK);
+	ret = new DialogSearchReturnType{ true,0,0 };
 
 	btnCancel.LinkControl(m_hWnd, IDCANCEL);
 
@@ -35,7 +22,7 @@ LRESULT DialogChooseLevel::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	return TRUE;    // let the system set the focus
 }
 
-LRESULT DialogChooseLevel::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT DialogSearch::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	if (IsManagerOnThread())
 	{
@@ -47,28 +34,6 @@ LRESULT DialogChooseLevel::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 	delete ret;
 	EndDialog(0);
-	return 0;
-}
-
-LRESULT DialogChooseLevel::OnPropertyChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
-{
-	WORD& id = wID;
-	ret->suit = rbGroupLevel.ReceiveCommand(id);
-	ret->isRandom = rbGroupSeed.ReceiveCommand(id);
-
-	if (ret->suit != 4 && ret->isRandom)
-	{
-		cbCanBeSolved.SetEnable(true);
-	}
-	else
-	{
-		cbCanBeSolved.SetEnable(false);
-		cbCanBeSolved.SetChecked(false);
-	}
-
-
-	editSeed.SetEnable(ret->isRandom == false);
-
 	return 0;
 }
 
@@ -93,7 +58,7 @@ void SetEnable(vector<TControl*> vec, bool enable)
 	}
 }
 
-bool DialogChooseLevel::IsManagerOnThread()
+bool DialogSearch::IsManagerOnThread()
 {
 	for (auto& manager : vecManager)
 		if (manager && manager->bOnThread)
@@ -103,7 +68,7 @@ bool DialogChooseLevel::IsManagerOnThread()
 	return false;
 }
 
-void DialogChooseLevel::StopManagerThread()
+void DialogSearch::StopManagerThread()
 {
 	for (auto& manager : vecManager)
 		if (manager->bOnThread)
@@ -112,7 +77,7 @@ void DialogChooseLevel::StopManagerThread()
 		}
 }
 
-LRESULT DialogChooseLevel::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT DialogSearch::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	int id = LOWORD(wParam);
 
@@ -127,20 +92,6 @@ LRESULT DialogChooseLevel::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 		{
 			StopManagerThread();
 			return 0;
-		}
-
-		if (ret->isRandom == false)
-		{
-			try
-			{
-				ret->seed = std::stoul(editSeed.GetText());
-			}
-			catch (...)
-			{
-				MessageBox(("无效的种子。范围：0-" + std::to_string(UINT_MAX)).c_str(), "错误", MB_OK | MB_ICONERROR);
-				::SetFocus(editSeed.GetHWND());
-				break;
-			}
 		}
 
 		if (cbCanBeSolved.GetChecked())

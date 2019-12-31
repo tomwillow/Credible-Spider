@@ -50,8 +50,8 @@ Manager::Manager(int suitNum) : Manager()
 {
 	poker = new Poker;
 
-	default_random_engine e;
-	e.seed(GetTickCount());
+	static default_random_engine e;
+	e.seed(e()+GetTickCount());
 	uint32_t seed = e();
 
 	Deal deal(suitNum, seed);

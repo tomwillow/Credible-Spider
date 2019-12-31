@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdio.h>//_vsnprintf_s
+#include <assert.h>
 #include <vector>
 #include <tchar.h>
 
@@ -153,6 +154,7 @@ void TControl::LinkControl(HWND hDlg, int id)
 
 void TControl::LinkControl(HWND hWndCtrl)//链接到已有控件（用于对话框中）
 {
+	assert(hWndCtrl);
 	m_hInst = GetModuleHandle(NULL);
 	m_hParent = GetParent(hWndCtrl);
 	m_hWnd = hWndCtrl;

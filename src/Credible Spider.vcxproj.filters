@@ -102,6 +102,12 @@
     <ClCompile Include="Control\TRadioButtonGroup.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Control\TStatic.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DialogSearch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
@@ -192,6 +198,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Control\TRadioButtonGroup.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\TStatic.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogSearch.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

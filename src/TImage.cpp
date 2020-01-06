@@ -1,5 +1,6 @@
 #include "TImage.h"
 
+#include <assert.h>
 
 TImage::TImage(HINSTANCE hInst,int id,int maskId):hInst(hInst),id(id),maskId(maskId),pt({0,0}),iWidth(1.0),iHeight(1.0)
 {
@@ -61,7 +62,7 @@ void TImage::Draw(HDC hdc,int dest_x,int dest_y,int img_x,int img_y,DWORD rop)
 		StretchBlt(hdc, newX, dest_y, newWidth, height * iHeight, hdcMemImag, img_x, img_y, width, height, SRCPAINT);//ÌîÄÚÈÝ
 	}
 	else
-		StretchBlt(hdc, newX, dest_y, newWidth, height * iHeight, hdcMemImag, img_x, img_y, width, height, rop);
+		assert(StretchBlt(hdc, newX, dest_y, newWidth, height * iHeight, hdcMemImag, img_x, img_y, width, height, rop));
 }
 
 void TImage::Fill(HDC hdc,const RECT &rect)

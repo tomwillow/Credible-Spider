@@ -15,8 +15,10 @@ private:
 	HBRUSH hBrushTipBox;
 	RECT rectTipBox;
 
-	TImage *imgBackground;
+	RECT rcClient;
+	HDC hdcMem;
 	HDC hdcBackground;
+	TImage *imgBackground;
 public:
 	bool doubleBuffer;
 	DECLARE_WND_CLASS(_T("Credible Spider Window"))

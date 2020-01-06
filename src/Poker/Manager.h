@@ -26,6 +26,7 @@ private:
 #ifndef _CONSOLE
 	bool hasLoadImage;
 	HWND hWnd;
+	const RECT* pRcClient;
 	int idCardEmpty, idCardBack, idCard1,idCardMask;
 	int soundTip, soundNoTip,soundWin,soundDeal;
 	std::vector<TImage*> vecImgCardEmpty;
@@ -99,9 +100,9 @@ public:
 #ifndef _CONSOLE
 	void SetSoundId(int idTip,int idNoTip,int idWin,int idDeal);
 	void SetTextOutputHWND(HWND hWnd);
-	void SetGUIProperty(HWND hWnd, int idCardEmpty, int idCardBack, int idCard1,int idCardMask);
+	void SetGUIProperty(HWND hWnd,const RECT *rcClient, int idCardEmpty, int idCardBack, int idCard1,int idCardMask);
 
-	void OnSize(RECT rect);
+	void OnSize(const RECT &rect);
 	void Draw(HDC hdc,const RECT &rect);
 
 	bool CanRedo();

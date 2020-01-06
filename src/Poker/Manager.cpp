@@ -52,28 +52,11 @@ dragInfo()
 
 Manager::Manager(int suitNum) : Manager()
 {
-	//poker = new Poker;
-
-	//static default_random_engine e;
-	//e.seed(e()+GetTickCount());
-	//uint32_t seed = e();
-
-	//Deal deal(suitNum, seed);
-	//deal.Do(poker);
-
-	//cout << *poker;
 	Command("newrandom " + to_string(suitNum));
 }
 
 Manager::Manager(int suitNum, uint32_t seed) :Manager()
 {
-	//poker = new Poker;
-
-	//Deal deal(suitNum, seed);
-	//deal.Do(poker);
-
-	//cout << *poker;
-
 	Command("new " + to_string(suitNum) + " " + to_string(seed));
 }
 
@@ -96,6 +79,7 @@ void Manager::ReleaseRecord()
 bool Manager::CanPick(Poker* poker, istream& in)
 {
 	int orig, num;
+#ifdef _CONSOLE
 	cout << "--canPick--" << endl << "input orig, num: ";
 	in >> orig >> num;
 	cout << endl;
@@ -110,16 +94,24 @@ bool Manager::CanPick(Poker* poker, istream& in)
 		cout << "Can't." << endl;
 		return false;
 	}
+#else
+	in >> orig >> num;
+	return ::CanPick(poker, orig, num);
+#endif
 }
 
 bool Manager::Move(Poker* poker, istream& in)
 {
 	int orig, dest, num;
+#ifdef _CONSOLE
 	cout << "--move--" << endl << "input orig, dest, num: "; in >> orig >> dest >> num;
 	cout << endl;
 	cout << "Chose: "; poker->printCard(orig, num);
 	cout << endl;
 	cout << "canMove? ";
+#else
+	in >> orig >> dest >> num;
+#endif
 	shared_ptr<PMove> action(new PMove(orig, dest, num));
 	bool success;
 	if (success = action->Do(poker))
@@ -183,6 +175,7 @@ void Manager::NewGame(istream& in, bool isRandom)
 		else
 		{
 			RefreshPaint();
+			bOnThread = false;
 		}
 	}
 #else
@@ -192,11 +185,6 @@ void Manager::NewGame(istream& in, bool isRandom)
 
 void Manager::NewGameSolved(istream& in)
 {
-	//RECT rect;
-	//GetClientRect(hWnd, &rect);
-	//InvalidateRect(hWnd, &rect, false);
-	//UpdateWindow(hWnd);
-
 	int suitNum;
 	cout << "--deal--" << endl << "input suitNum: ";
 	in >> suitNum;
@@ -388,10 +376,8 @@ bool Manager::ReadIn(istream& in)
 				if (poker->hasGUI)
 				{
 					//record.back()->RedoAnimation(hWnd, bOnThread, bStopThread);
-					RECT rc;
-					GetClientRect(hWnd, &rc);
-					OnSize(rc);
-					InvalidateRect(hWnd, &rc, false);
+					OnSize(*pRcClient);
+					InvalidateRect(hWnd, pRcClient, false);
 					UpdateWindow(hWnd);
 				}
 #else
@@ -421,7 +407,6 @@ bool Manager::ReadIn(istream& in)
 
 		cout << "Unknowned Command" << endl;
 		throw "Error:Unknowned Command";
-		//cout << ">>";
 	}
 	return success;
 }
@@ -542,7 +527,8 @@ std::vector<Manager::Node> Manager::GetAllOperator(std::vector<int>& emptyIndex,
 	return actions;
 }
 
-bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shared_ptr<Action>>& record, unordered_set<Poker>& states, int stackLimited, int calcLimited, bool playAnimation)
+bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shared_ptr<Action>>& record,
+	unordered_set<Poker>& states, int stackLimited, int calcLimited, bool playAnimation)
 {
 	if (poker->isFinished())
 	{
@@ -686,10 +672,8 @@ bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shar
 					node.action->StartAnimation(hWnd, bNounce, bStop);
 				else
 				{
-					RECT rc;
-					GetClientRect(hWnd, &rc);
-					OnSize(rc);
-					InvalidateRect(hWnd, &rc, false);
+					OnSize(*pRcClient);
+					InvalidateRect(hWnd, pRcClient, false);
 					UpdateWindow(hWnd);
 					Sleep(1);
 				}
@@ -717,10 +701,8 @@ bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shar
 					node.action->RedoAnimation(hWnd, bNounce, bStop);
 				else
 				{
-					RECT rc;
-					GetClientRect(hWnd, &rc);
-					OnSize(rc);
-					InvalidateRect(hWnd, &rc, false);
+					OnSize(*pRcClient);
+					InvalidateRect(hWnd, pRcClient, false);
 					UpdateWindow(hWnd);
 					Sleep(1);
 				}
@@ -823,9 +805,10 @@ void Manager::SetTextOutputHWND(HWND hWnd)
 	this->hWnd = hWnd;
 }
 
-void Manager::SetGUIProperty(HWND hWnd, int idCardEmpty, int idCardBack, int idCard1, int idCardMask)
+void Manager::SetGUIProperty(HWND hWnd,const RECT *rcClient, int idCardEmpty, int idCardBack, int idCard1, int idCardMask)
 {
 	this->hWnd = hWnd;
+	this->pRcClient = rcClient;
 	this->idCardEmpty = idCardEmpty;
 	this->idCardBack = idCardBack;
 	this->idCard1 = idCard1;
@@ -899,7 +882,7 @@ bool Manager::PtInRelease(POINT pt)
 	return ret;
 }
 
-void Manager::OnSize(RECT rect)
+void Manager::OnSize(const RECT &rect)
 {
 	if (hasLoadImage == false)
 		return;
@@ -1089,9 +1072,7 @@ bool Manager::ShowOneHint()
 	pMove->StartHintAnimation(hWnd, bOnThread, bStopThread);
 	pMove->Redo(poker);
 
-	RECT rect;
-	GetClientRect(hWnd, &rect);
-	InvalidateRect(hWnd, &rect, false);
+	InvalidateRect(hWnd, pRcClient, false);
 
 	//递增i
 	i++;
@@ -1173,10 +1154,8 @@ void Manager::GiveUpDrag()
 	dragInfo.vecCard.clear();
 
 	//恢复位置并刷新
-	RECT rect;
-	GetClientRect(hWnd, &rect);
-	OnSize(rect);
-	InvalidateRect(hWnd, &rect, false);
+	OnSize(*pRcClient);
+	InvalidateRect(hWnd, pRcClient, false);
 
 }
 
@@ -1202,9 +1181,7 @@ bool Manager::OnMouseMove(POINT pt)
 			}
 
 			//刷新
-			RECT rect;
-			GetClientRect(hWnd, &rect);
-			InvalidateRect(hWnd, &rect, false);
+			InvalidateRect(hWnd, pRcClient, false);
 			return true;
 		}
 	}
@@ -1213,8 +1190,6 @@ bool Manager::OnMouseMove(POINT pt)
 
 bool Manager::OnLButtonUp(POINT pt)
 {
-	RECT rect;
-	GetClientRect(hWnd, &rect);
 	if (dragInfo.bOnDrag)
 	{
 		//取得拖动牌最顶上一张坐标
@@ -1250,7 +1225,7 @@ bool Manager::OnLButtonUp(POINT pt)
 		};
 
 		//取得目标牌位号
-		int dest = GetDestIndex(poker, rect, ptUpCard, dragInfo.orig, dragInfo.num);
+		int dest = GetDestIndex(poker, *pRcClient, ptUpCard, dragInfo.orig, dragInfo.num);
 
 		//恢复拖动设置
 		dragInfo.bOnDrag = false;
@@ -1266,13 +1241,13 @@ bool Manager::OnLButtonUp(POINT pt)
 			//进行移动
 			Command("m " + to_string(dragInfo.orig) + " " + to_string(dest) + " " + to_string(dragInfo.num));
 
-			OnSize(rect);
-			InvalidateRect(hWnd, &rect, false);
+			OnSize(*pRcClient);
+			InvalidateRect(hWnd, pRcClient, false);
 			return true;
 		}
 	}
-	OnSize(rect);
-	InvalidateRect(hWnd, &rect, false);
+	OnSize(*pRcClient);
+	InvalidateRect(hWnd, pRcClient, false);
 	return false;
 }
 
@@ -1283,10 +1258,8 @@ bool Manager::GetIsWon()
 
 void Manager::RefreshPaint()
 {
-	RECT rect;
-	GetClientRect(hWnd, &rect);
-	OnSize(rect);
-	InvalidateRect(hWnd, &rect, false);
+	OnSize(*pRcClient);
+	InvalidateRect(hWnd, pRcClient, false);
 }
 
 void Manager::Win()
@@ -1302,12 +1275,9 @@ void Manager::Win()
 		bStopThread = false;
 		while (bStopThread == false)
 		{
-			RECT rect;
-			GetClientRect(hWnd, &rect);
-			InvalidateRect(hWnd, &rect, false);
-			//UpdateWindow(hWnd);
-			//PostMessage(hWnd, WM_PAINT, 0, 0);
-			Sleep(25);//50 fps
+			InvalidateRect(hWnd, pRcClient, false);
+
+			Sleep(25);//不知为何低于25时开局对话框弹不出来
 		}
 		bOnThread = false;
 	};

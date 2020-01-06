@@ -90,6 +90,8 @@
     <ClCompile Include="Dialog\DialogAbout.cpp" />
     <ClCompile Include="Dialog\DialogAuto.cpp" />
     <ClCompile Include="Firework.cpp" />
+    <ClCompile Include="GauseBlur.cpp" />
+    <ClCompile Include="LayerStyle.cpp" />
     <ClCompile Include="Poker\CardTurnOverAnimation.cpp" />
     <ClCompile Include="Dialog\DialogChooseLevel.cpp" />
     <ClCompile Include="Animation\ParallelAnimation.cpp" />
@@ -124,6 +126,8 @@
     <ClInclude Include="Dialog\DialogSearch.h" />
     <ClInclude Include="Dialog\DialogAuto.h" />
     <ClInclude Include="Firework.h" />
+    <ClInclude Include="GauseBlur.h" />
+    <ClInclude Include="LayerStyle.h" />
     <ClInclude Include="Poker\CardTurnOverAnimation.h" />
     <ClInclude Include="Dialog\DialogChooseLevel.h" />
     <ClInclude Include="POINT.h" />

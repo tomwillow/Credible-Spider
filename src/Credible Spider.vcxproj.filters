@@ -111,6 +111,12 @@
     <ClCompile Include="Configuration.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="GauseBlur.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LayerStyle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
@@ -210,6 +216,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Configuration.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GauseBlur.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LayerStyle.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

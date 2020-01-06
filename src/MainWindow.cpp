@@ -1,11 +1,15 @@
 #include "MainWindow.h"
 
+#include "GauseBlur.h"
+
+#include "POINT.h"
 #include "Configuration.h"
 #include "DialogChooseLevel.h"
 #include "DialogAuto.h"
 #include "DialogAbout.h"
 
 #pragma comment(lib,"winmm.lib")
+#pragma comment(lib,"msimg32.lib")
 
 #include <thread>
 
@@ -14,7 +18,7 @@ using namespace std;
 extern Configuration config;
 const string savFileName = "credible spider.sav";
 
-void DrawTextAdvance(HDC hdc, const TCHAR text[], RECT *rect, long FontSize, int FontWeight, COLORREF color, const TCHAR FontName[], UINT format, int cEscapement = 0, int cOrientation = 0)
+void DrawTextAdvance(HDC hdc, const TCHAR text[], RECT* rect, long FontSize, int FontWeight, COLORREF color, const TCHAR FontName[], UINT format, int cEscapement = 0, int cOrientation = 0)
 {
 	long lfHeight = -MulDiv(FontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
 	HFONT hf = CreateFont(lfHeight, 0, cEscapement, cOrientation, FontWeight, 0, 0, 0, 0, 0, 0, 0, 0, FontName);
@@ -27,7 +31,7 @@ void DrawTextAdvance(HDC hdc, const TCHAR text[], RECT *rect, long FontSize, int
 	DeleteObject(hf);
 }
 
-void DrawTextCenter(HDC hdc, const TCHAR text[], const RECT &rect, long FontSize, int FontWeight, COLORREF color, const TCHAR FontName[], UINT format)
+void DrawTextCenter(HDC hdc, const TCHAR text[], const RECT& rect, long FontSize, int FontWeight, COLORREF color, const TCHAR FontName[], UINT format)
 {
 	RECT rectText = rect;
 	DrawTextAdvance(hdc, text, &rectText, FontSize, FontWeight, color, FontName, format | DT_CALCRECT);
@@ -57,20 +61,22 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 	//设置背景
 	imgBackground = new TImage(GetModuleHandle(NULL), IDB_BACKGROUND);
+	hdcBackground = CreateCompatibleDC(NULL);
 
 	//提示框
 	hBrushTipBox = CreateSolidBrush(crTipBox);
 
 	//初始化manager
 	manager = make_shared<Manager>();
-	manager->SetSoundId(IDR_WAVE_TIP, IDR_WAVE_NOTIP,IDR_WAVE_SUCCESS,IDR_WAVE_DEAL);
-	manager->SetGUIProperty(m_hWnd, IDB_CARDEMPTY, IDB_CARDBACK, IDB_CARD1,IDB_CARDMASK);
+	manager->SetSoundId(IDR_WAVE_TIP, IDR_WAVE_NOTIP, IDR_WAVE_SUCCESS, IDR_WAVE_DEAL);
+	manager->SetGUIProperty(m_hWnd, &rcClient, IDB_CARDEMPTY, IDB_CARDBACK, IDB_CARD1, IDB_CARDMASK);
 
-	if (config.LoadFromFile(savFileName)==false)
+	//加载配置
+	if (config.LoadFromFile(savFileName) == false)
 	{
 		config.enableAnimation = false;
 		config.enableSound = true;
-	}  
+	}
 	CheckMenuItem(GetMenu(), ID_ENABLE_ANIMATION, config.enableAnimation ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(GetMenu(), ID_ENABLE_SOUND, config.enableSound ? MF_CHECKED : MF_UNCHECKED);
 
@@ -126,15 +132,93 @@ LRESULT MainWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 {
 	delete imgBackground;
 
+	ReleaseDC(hdcMem);
+
+	DeleteDC(hdcBackground);
 	DeleteObject(hBrushTipBox);
 	PostQuitMessage(0);
 	return 0;
 }
 
-void MainWindow::Draw(HDC hdc, const RECT &rect)
+
+HBITMAP CreateGDIBitmap(int nWid, int nHei, void** ppBits)
 {
-	//Background
-	imgBackground->Fill(hdc, rect);
+	BITMAPINFO bmi;
+	memset(&bmi, 0, sizeof(bmi));
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = nWid;
+	bmi.bmiHeader.biHeight = -nHei; // top-down image 
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
+	bmi.bmiHeader.biSizeImage = 0;
+
+	HDC hdc = GetDC(NULL);
+	HBITMAP hBmp = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, ppBits, 0, 0);
+	ReleaseDC(NULL, hdc);
+	return hBmp;
+}
+
+void MainWindow::Draw(HDC hdc, const RECT& rect)
+{
+
+	BitBlt(hdc, 0, 0, rect.right, rect.bottom, hdcBackground, 0, 0, SRCCOPY);
+
+
+	manager->Draw(hdc, rect);
+
+
+
+	RECT rcShadow = rectTipBox + POINT{ 5,5 };
+	RECT rcShadowOut = ExpandRect(rcShadow, 5);
+
+	int width = GetWidth(rcShadowOut);
+	int height = GetHeight(rcShadowOut);
+
+	HDC hdcShadow = CreateCompatibleDC(hdc);
+	BYTE* pb = nullptr;
+	HBITMAP hBitmapShadow = CreateGDIBitmap(width, height, (void**)&pb);
+	SelectObject(hdcShadow, hBitmapShadow);
+
+	//alpha通道设置为0xff
+	UINT* pu = (UINT*)pb;
+	for (int k = 0; k < width * height; ++k)
+	{
+		pu[k] = 0xff000000;
+	}
+
+	//GDI函数会将alpha通道置0
+	MoveToZero(rcShadow);
+	rcShadow += POINT{ 5, 5 };
+	SelectObject(hdcShadow,GetStockBrush(BLACK_BRUSH));
+	Rectangle(hdcShadow, rcShadow);
+
+	//alpha通道取反
+	for (int k = 3; k < width * height*4; k+=4)
+	{
+		pb[k] = ~pb[k];
+	}
+
+	RECT rcShadowOutClient = rcShadowOut;
+	MoveToZero(rcShadowOutClient);
+
+	//对全部像素包括alpha通道做高斯模糊
+	int dist = 5;
+	double* matrix = CalcGauseBlurMatrix(5, dist);
+	for (int y=0;y<height;++y)
+		for (int x = 0; x < width; ++x)
+		{
+			pu[y*width+x]= GetGauseBlur(x, y, pu, width, rcShadowOutClient, matrix, dist);
+		}
+	delete[] matrix;
+
+	BLENDFUNCTION bf = { AC_SRC_OVER,0,0xff,AC_SRC_ALPHA };
+	BOOL bRet = ::AlphaBlend(hdc,rcShadowOut.left,rcShadowOut.top,width,height,hdcShadow,0,0,width,height, bf);
+
+	ReleaseDC(hdcShadow);
+	DeleteObject(hBitmapShadow);
+
+	//BitBlt(hdc, rcShadowOut.left, rcShadowOut.top, width, height, hdcShadow, 0, 0, SRCCOPY);
 
 	//TipBox
 	if (manager->HasPoker())
@@ -143,45 +227,47 @@ void MainWindow::Draw(HDC hdc, const RECT &rect)
 		textTipBox += "操作：" + std::to_string(manager->GetPokerOperation());
 	}
 
+	SelectObject(hdc, GetStockPen(BLACK_PEN));
 	SelectObject(hdc, hBrushTipBox);
 	Rectangle(hdc, rectTipBox.left, rectTipBox.top, rectTipBox.right, rectTipBox.bottom);
 
 	DrawTextCenter(hdc, textTipBox.c_str(), rectTipBox, 12, 400, RGB(255, 255, 255), TEXT("宋体"), DT_LEFT);
-
-	//
-	manager->Draw(hdc,rect);
 }
 
 LRESULT MainWindow::OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+	//HDC hdc;
+	//RECT rect;
+	//GetClientRect(&rect);
+	//PAINTSTRUCT ps;
+	//hdc = BeginPaint(&ps);
+
+	//imgBackground->Fill(hdc, rect);
+
+	//EndPaint(&ps);
 	return false;
 }
 
 LRESULT MainWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+#ifdef _DEBUG
+	static DWORD prev = 0, now;
+	now = GetTickCount();
+	//OutputDebugString((to_string(1000.0/(now - prev))+"\n").c_str());
+	prev = now;
+#endif
 
-	HDC hdc;
-	RECT rect;
 	PAINTSTRUCT ps;
-	hdc = BeginPaint(&ps);
-	GetClientRect(&rect);
+	HDC hdc = BeginPaint(&ps);
 
 	if (doubleBuffer)
 	{
-		HDC hDCMem;
-		HBITMAP hBitmap;
-		hDCMem = CreateCompatibleDC(hdc);
-		hBitmap = CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.bottom - rect.top);
-		SelectObject(hDCMem, hBitmap);
+		Draw(hdcMem, rcClient);
 
-		Draw(hDCMem, rect);
-
-		BitBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, hDCMem, 0, 0, SRCCOPY);
-		DeleteObject(hBitmap);
-		DeleteDC(hDCMem);
+		BitBlt(hdc, 0, 0, rcClient.right, rcClient.bottom, hdcMem, 0, 0, SRCCOPY);
 	}
 	else
-		Draw(ps.hdc, rect);
+		Draw(ps.hdc, rcClient);
 
 	EndPaint(&ps);
 	return 0;
@@ -190,17 +276,37 @@ LRESULT MainWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 
 LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	RECT rect;
-	GetClientRect(&rect);
+	GetClientRect(&rcClient);
 
 	//刷新提示框位置
-	rectTipBox.left = (rect.right - TIPBOX_WIDTH) / 2;
+	rectTipBox.left = (rcClient.right - TIPBOX_WIDTH) / 2;
 	rectTipBox.right = rectTipBox.left + TIPBOX_WIDTH;
-	rectTipBox.bottom = rect.bottom - border;
+	rectTipBox.bottom = rcClient.bottom - border;
 	rectTipBox.top = rectTipBox.bottom - TIPBOX_HEIGHT;
 
+	HDC hdc = GetDC();
+	ReleaseDC(hdcMem);
+	hdcMem = CreateCompatibleDC(hdc);
+	HBITMAP hBitmapMem = CreateCompatibleBitmap(hdc, rcClient.right, rcClient.bottom);
+	SelectObject(hdcMem, hBitmapMem);
+
+	DeleteObject(hBitmapMem);
+
+	if (imgBackground)
+	{
+		ReleaseDC(hdcBackground);
+		hdcBackground = CreateCompatibleDC(hdc);
+		HBITMAP hBitmap = CreateCompatibleBitmap(hdc, rcClient.right, rcClient.bottom);
+		SelectObject(hdcBackground, hBitmap);
+
+		imgBackground->Fill(hdcBackground, rcClient);
+
+		DeleteObject(hBitmap);
+	}
+	ReleaseDC(hdc);
+
 	if (manager)
-		manager->OnSize(rect);
+		manager->OnSize(rcClient);
 
 	return 0;
 }
@@ -224,7 +330,7 @@ LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	static bool bOpenDialog = true;
-	static int suit=0;
+	static int suit = 0;
 	static bool isRandom = true;
 	static uint32_t seed = 0;
 	if (bOpenDialog)
@@ -246,7 +352,7 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 		{
 			manager->bStopThread = true;
 			bOpenDialog = false;
-			PostMessage(WM_COMMAND, MAKELONG(ID_NEW_GAME,0 ), 0);
+			PostMessage(WM_COMMAND, MAKELONG(ID_NEW_GAME, 0), 0);
 			return 0;
 		}
 
@@ -260,7 +366,7 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 				//随机新游戏
 				manager->Command("newrandom " + std::to_string(suit));
 			else
-				manager->Command("new " + std::to_string(suit)+" "+std::to_string(seed));
+				manager->Command("new " + std::to_string(suit) + " " + std::to_string(seed));
 
 			//若发牌途中退出
 			if (manager->bStopThread)
@@ -377,7 +483,7 @@ void MainWindow::EnableAllInput(bool enable)
 			{
 				int id = GetMenuItemID(hSubMenu, j);
 
-				EnableMenuItem(hMenu, id, origin[i][j+1]);
+				EnableMenuItem(hMenu, id, origin[i][j + 1]);
 			}
 		}
 		origin.clear();
@@ -445,7 +551,7 @@ LRESULT MainWindow::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	if (manager->OnLButtonUp(ptPos))
 	{
 		if (config.enableSound)
-		PlaySound((LPCSTR)IDR_WAVE_PUTDOWN, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+			PlaySound((LPCSTR)IDR_WAVE_PUTDOWN, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
 
 		if (manager->GetIsWon())
 			manager->Win();

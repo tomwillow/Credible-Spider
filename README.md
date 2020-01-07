@@ -16,4 +16,14 @@ The purpose of this project is in below:
    Realize a like-Windows spider solitaire, added the "Credible Game", "Auto-Play" function. (finished)
 
 ## 可靠牌局 Credible game
-![](https://github.com/tomwillow/Credible-Spider/blob/master/snap/credible%20game.PNG)
+多线程寻找可解牌局 Find one game that can be solved by using multi-thread
+![]("https://github.com/tomwillow/Credible-Spider/blob/master/snap/credible game.PNG")
+![](https://github.com/tomwillow/Credible-Spider/blob/master/snap/found%20credible%20game.PNG)
+
+## 自动翻牌 Auto-play
+自动翻牌功能目前能解出90%以上的1花色牌局，20%左右的2花色牌局，4花色不能解出。在解决方案内另有一个控制台版蜘蛛纸牌，我在控制台版本中使用项目方法求解4花色蜘蛛纸牌，最大尝试步骤设置为100,000，单把牌局大约耗时10min，仍然不能解出。
+Currently Auto-play function can solve more than 90% game of 1 suit number, and about 20% game of 2 suit number, can not solve 4 suit-number game. Here is a console-version spider solitaire game, I have used this method to solve 4 suit-number game, in the case of that maximum trying-step-number set be 100,000 and one game spend 10min, the 4 suit-number game is still not solved.
+![](https://github.com/tomwillow/Credible-Spider/blob/master/snap/auto-play.PNG)
+
+## 胜利效果 Win effect
+![](https://github.com/tomwillow/Credible-Spider/blob/master/snap/firework.PNG)

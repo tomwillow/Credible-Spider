@@ -17,7 +17,7 @@ The purpose of this project is in below:
 
 ## 可靠牌局 Credible game
 多线程寻找可解牌局 Find one game that can be solved by using multi-thread
-![]("https://github.com/tomwillow/Credible-Spider/blob/master/snap/credible game.PNG")
+![](https://github.com/tomwillow/Credible-Spider/blob/master/snap/credible%20game.PNG)
 ![](https://github.com/tomwillow/Credible-Spider/blob/master/snap/found%20credible%20game.PNG)
 
 ## 自动翻牌 Auto-play

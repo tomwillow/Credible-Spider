@@ -5,6 +5,7 @@
 
 #include <memory>
 
+class RectShadow;
 class MainWindow :public CWindowImpl<MainWindow, CWindow, CFrameWinTraits>
 {
 private:
@@ -14,6 +15,7 @@ private:
 	std::string textTipBox;
 	HBRUSH hBrushTipBox;
 	RECT rectTipBox;
+	RectShadow* rectShadow;
 
 	RECT rcClient;
 	HDC hdcMem;

@@ -98,6 +98,7 @@
     <ClCompile Include="POINT.cpp" />
     <ClCompile Include="Poker\Restore.cpp" />
     <ClCompile Include="Animation\SequentialAnimation.cpp" />
+    <ClCompile Include="RectShadow.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Poker\PMove.cpp" />
@@ -132,6 +133,7 @@
     <ClInclude Include="Dialog\DialogChooseLevel.h" />
     <ClInclude Include="POINT.h" />
     <ClInclude Include="Poker\Restore.h" />
+    <ClInclude Include="RectShadow.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Animation\SequentialAnimation.h" />
     <ClInclude Include="Animation\SettingAnimation.h" />

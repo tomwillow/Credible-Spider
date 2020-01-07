@@ -1,15 +1,12 @@
 #include "MainWindow.h"
 
-#include "GauseBlur.h"
-
-#include "POINT.h"
 #include "Configuration.h"
 #include "DialogChooseLevel.h"
 #include "DialogAuto.h"
 #include "DialogAbout.h"
 
+#include "RectShadow.h"
 #pragma comment(lib,"winmm.lib")
-#pragma comment(lib,"msimg32.lib")
 
 #include <thread>
 
@@ -65,6 +62,8 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 	//提示框
 	hBrushTipBox = CreateSolidBrush(crTipBox);
+
+	rectShadow = nullptr;
 
 	//初始化manager
 	manager = make_shared<Manager>();
@@ -132,6 +131,8 @@ LRESULT MainWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 {
 	delete imgBackground;
 
+	delete rectShadow;
+
 	ReleaseDC(hdcMem);
 
 	DeleteDC(hdcBackground);
@@ -141,86 +142,19 @@ LRESULT MainWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 }
 
 
-HBITMAP CreateGDIBitmap(int nWid, int nHei, void** ppBits)
-{
-	BITMAPINFO bmi;
-	memset(&bmi, 0, sizeof(bmi));
-	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = nWid;
-	bmi.bmiHeader.biHeight = -nHei; // top-down image 
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = 32;
-	bmi.bmiHeader.biCompression = BI_RGB;
-	bmi.bmiHeader.biSizeImage = 0;
-
-	HDC hdc = GetDC(NULL);
-	HBITMAP hBmp = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, ppBits, 0, 0);
-	ReleaseDC(NULL, hdc);
-	return hBmp;
-}
 
 void MainWindow::Draw(HDC hdc, const RECT& rect)
 {
-
+	//贴上背景
 	BitBlt(hdc, 0, 0, rect.right, rect.bottom, hdcBackground, 0, 0, SRCCOPY);
 
-
+	//绘制牌局
 	manager->Draw(hdc, rect);
 
+	//绘制阴影
+	rectShadow->Draw(hdc);
 
-
-	RECT rcShadow = rectTipBox + POINT{ 5,5 };
-	RECT rcShadowOut = ExpandRect(rcShadow, 5);
-
-	int width = GetWidth(rcShadowOut);
-	int height = GetHeight(rcShadowOut);
-
-	HDC hdcShadow = CreateCompatibleDC(hdc);
-	BYTE* pb = nullptr;
-	HBITMAP hBitmapShadow = CreateGDIBitmap(width, height, (void**)&pb);
-	SelectObject(hdcShadow, hBitmapShadow);
-
-	//alpha通道设置为0xff
-	UINT* pu = (UINT*)pb;
-	for (int k = 0; k < width * height; ++k)
-	{
-		pu[k] = 0xff000000;
-	}
-
-	//GDI函数会将alpha通道置0
-	MoveToZero(rcShadow);
-	rcShadow += POINT{ 5, 5 };
-	SelectObject(hdcShadow,GetStockBrush(BLACK_BRUSH));
-	Rectangle(hdcShadow, rcShadow);
-
-	//alpha通道取反
-	for (int k = 3; k < width * height*4; k+=4)
-	{
-		pb[k] = ~pb[k];
-	}
-
-	RECT rcShadowOutClient = rcShadowOut;
-	MoveToZero(rcShadowOutClient);
-
-	//对全部像素包括alpha通道做高斯模糊
-	int dist = 5;
-	double* matrix = CalcGauseBlurMatrix(5, dist);
-	for (int y=0;y<height;++y)
-		for (int x = 0; x < width; ++x)
-		{
-			pu[y*width+x]= GetGauseBlur(x, y, pu, width, rcShadowOutClient, matrix, dist);
-		}
-	delete[] matrix;
-
-	BLENDFUNCTION bf = { AC_SRC_OVER,0,0xff,AC_SRC_ALPHA };
-	BOOL bRet = ::AlphaBlend(hdc,rcShadowOut.left,rcShadowOut.top,width,height,hdcShadow,0,0,width,height, bf);
-
-	ReleaseDC(hdcShadow);
-	DeleteObject(hBitmapShadow);
-
-	//BitBlt(hdc, rcShadowOut.left, rcShadowOut.top, width, height, hdcShadow, 0, 0, SRCCOPY);
-
-	//TipBox
+	//绘制TipBox
 	if (manager->HasPoker())
 	{
 		textTipBox = "分数：" + std::to_string(manager->GetPokerScore()) + "\r\n";
@@ -251,10 +185,10 @@ LRESULT MainWindow::OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 LRESULT MainWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 #ifdef _DEBUG
-	static DWORD prev = 0, now;
-	now = GetTickCount();
+	//static DWORD prev = 0, now;
+	//now = GetTickCount();
 	//OutputDebugString((to_string(1000.0/(now - prev))+"\n").c_str());
-	prev = now;
+	//prev = now;
 #endif
 
 	PAINTSTRUCT ps;
@@ -284,13 +218,16 @@ LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	rectTipBox.bottom = rcClient.bottom - border;
 	rectTipBox.top = rectTipBox.bottom - TIPBOX_HEIGHT;
 
+
 	HDC hdc = GetDC();
 	ReleaseDC(hdcMem);
 	hdcMem = CreateCompatibleDC(hdc);
 	HBITMAP hBitmapMem = CreateCompatibleBitmap(hdc, rcClient.right, rcClient.bottom);
 	SelectObject(hdcMem, hBitmapMem);
-
 	DeleteObject(hBitmapMem);
+
+	delete rectShadow;
+	rectShadow = new RectShadow(hdc, m_hWnd, rectTipBox, 10, -45, 5.0);
 
 	if (imgBackground)
 	{

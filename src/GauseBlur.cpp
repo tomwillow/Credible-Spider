@@ -3,7 +3,17 @@
 
 #include "GauseBlur.h"
 
-double* CalcGauseBlurMatrix(double sigma, int dist)
+GauseBlur::GauseBlur(double sigma, int dist) :dist(dist)
+{
+	matrix = CalcGauseBlurMatrix(sigma, dist);
+}
+
+GauseBlur::~GauseBlur()
+{
+	delete[] matrix;
+}
+
+double* GauseBlur::CalcGauseBlurMatrix(double sigma, int dist)
 {
 	unsigned int sz = 1 + dist * 2;
 	double* ret = new double[sz * sz];
@@ -22,7 +32,7 @@ double* CalcGauseBlurMatrix(double sigma, int dist)
 	return ret;
 }
 
-UINT GetGauseBlur(int x, int y, const UINT* puStart, int width, const RECT& rect, double* matrix, int dist)
+UINT GauseBlur::GetGauseBlur(int x, int y, const UINT* puStart, int width, const RECT& rect, double* matrix, int dist)
 {
 	UINT ret = 0;
 	float r = 0, g = 0, b = 0, alpha = 0, v = 0;
@@ -47,4 +57,16 @@ UINT GetGauseBlur(int x, int y, const UINT* puStart, int width, const RECT& rect
 	p[2] = r;
 	p[3] = alpha;
 	return ret;
+}
+
+void GauseBlur::Do(UINT* puStart, int width, int height)
+{
+	RECT rc = { 0,0,width,height };
+	int index = 0;
+	for (int y=0;y<height;++y)
+		for (int x = 0; x < width; ++x)
+		{
+			puStart[index] = GetGauseBlur(x, y, puStart, width, rc, matrix, dist);
+			++index;
+		}
 }

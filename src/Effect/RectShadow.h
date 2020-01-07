@@ -9,7 +9,6 @@ private:
 	RECT rcShadowOut;
 	HWND hWnd;
 	HDC hdcShadow;
-	HBITMAP hBitmapShadow;
 public:
 	RectShadow(HDC hdc, HWND hWnd, const RECT &rc,int dist,double angleDEG,double sigma);
 	~RectShadow();

@@ -42,9 +42,6 @@
     <ClCompile Include="MainWindow.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="TImage.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -61,9 +58,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Animation\SequentialAnimation.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="POINT.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Animation\ParallelAnimation.cpp">
@@ -87,9 +81,6 @@
     <ClCompile Include="Control\tstring.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Firework.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Dialog\DialogAbout.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -111,13 +102,19 @@
     <ClCompile Include="Configuration.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="GauseBlur.cpp">
+    <ClCompile Include="Effect\POINT.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="LayerStyle.cpp">
+    <ClCompile Include="Effect\RectShadow.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="RectShadow.cpp">
+    <ClCompile Include="Effect\TImage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Effect\Firework.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Effect\GauseBlur.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -152,9 +149,6 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="TImage.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Dialog\DialogChooseLevel.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -171,9 +165,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Animation\SettingAnimation.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="POINT.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Animation\ValueAnimation.h">
@@ -200,9 +191,6 @@
     <ClInclude Include="Dialog\DialogAuto.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Firework.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Control\TGroupBox.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -221,13 +209,19 @@
     <ClInclude Include="Configuration.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="GauseBlur.h">
+    <ClInclude Include="Effect\GauseBlur.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="LayerStyle.h">
+    <ClInclude Include="Effect\POINT.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="RectShadow.h">
+    <ClInclude Include="Effect\RectShadow.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Effect\TImage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Effect\Firework.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

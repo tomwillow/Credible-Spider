@@ -26,6 +26,7 @@ double* GauseBlur::CalcGauseBlurMatrix(double sigma, int dist)
 			sum += ret[i * sz + j];
 		}
 
+	//均一化权重，使所有权重加起来为1
 	for (int i = 0; i < sz; ++i)
 		for (int j = 0; j < sz; ++j)
 			ret[i * sz + j] /= sum;
@@ -35,8 +36,10 @@ double* GauseBlur::CalcGauseBlurMatrix(double sigma, int dist)
 UINT GauseBlur::GetGauseBlur(int x, int y, const UINT* puStart, int width, const RECT& rect, double* matrix, int dist)
 {
 	UINT ret = 0;
-	float r = 0, g = 0, b = 0, alpha = 0, v = 0;
+	float r = 0, g = 0, b = 0, alpha = 0;
 	int sz = 1 + dist * 2;
+
+	//不超出限定框
 	int ystart = max(rect.top, y - dist);
 	int yend = min(rect.bottom - 1, y + dist);
 	int xstart = max(rect.left, x - dist);

@@ -63,7 +63,7 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	//提示框
 	hBrushTipBox = CreateSolidBrush(crTipBox);
 
-	rectShadow = nullptr;
+	//rectShadow = nullptr;
 
 	//初始化manager
 	manager = make_shared<Manager>();
@@ -109,7 +109,7 @@ LRESULT MainWindow::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 
 			//再次发送WM_CLOSE消息
 			//使用这种方式是因为动画会调用UpdataWindow，如果此处阻塞，正在执行的动画将卡死
-			//此处不阻塞，将关闭消息再次加入队列，确保关闭消息始终处于队列中
+			//所以，此处不阻塞，将关闭消息再次加入队列，确保关闭消息始终处于队列中
 			//这样，此处将多次到达，并检测动画是否结束
 			PostMessage(WM_CLOSE);
 			break;
@@ -131,7 +131,7 @@ LRESULT MainWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 {
 	delete imgBackground;
 
-	delete rectShadow;
+	//delete rectShadow;
 
 	ReleaseDC(hdcMem);
 
@@ -152,7 +152,7 @@ void MainWindow::Draw(HDC hdc, const RECT& rect)
 	manager->Draw(hdc, rect);
 
 	//绘制阴影
-	rectShadow->Draw(hdc);
+	//rectShadow->Draw(hdc);
 
 	//绘制TipBox
 	if (manager->HasPoker())
@@ -210,6 +210,7 @@ LRESULT MainWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 
 LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+	//因为WM_SIZE会手动发送，所以rcClient不能取用wParam中的值
 	GetClientRect(&rcClient);
 
 	//刷新提示框位置
@@ -220,25 +221,31 @@ LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 
 
 	HDC hdc = GetDC();
+
 	ReleaseDC(hdcMem);
 	hdcMem = CreateCompatibleDC(hdc);
+
+	//设置hdcMem大小
 	HBITMAP hBitmapMem = CreateCompatibleBitmap(hdc, rcClient.right, rcClient.bottom);
 	SelectObject(hdcMem, hBitmapMem);
 	DeleteObject(hBitmapMem);
 
-	delete rectShadow;
-	rectShadow = new RectShadow(hdc, m_hWnd, rectTipBox, 10, -45, 5.0);
+	//创建阴影
+	//delete rectShadow;
+	//rectShadow = new RectShadow(hdc, m_hWnd, rectTipBox, 10, -45, 5.0);
 
 	if (imgBackground)
 	{
 		ReleaseDC(hdcBackground);
 		hdcBackground = CreateCompatibleDC(hdc);
+
+		//设置hdcBackground大小
 		HBITMAP hBitmap = CreateCompatibleBitmap(hdc, rcClient.right, rcClient.bottom);
 		SelectObject(hdcBackground, hBitmap);
+		DeleteObject(hBitmap);
 
 		imgBackground->Fill(hdcBackground, rcClient);
 
-		DeleteObject(hBitmap);
 	}
 	ReleaseDC(hdc);
 

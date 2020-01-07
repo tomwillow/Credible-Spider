@@ -40,7 +40,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)Control;$(SolutionDir)Dialog;$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)Effect;$(SolutionDir)Control;$(SolutionDir)Dialog;$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)..\$(Configuration)\</OutDir>
     <IntDir>..\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -89,16 +89,16 @@
     <ClCompile Include="Dialog\DialogSearch.cpp" />
     <ClCompile Include="Dialog\DialogAbout.cpp" />
     <ClCompile Include="Dialog\DialogAuto.cpp" />
-    <ClCompile Include="Firework.cpp" />
-    <ClCompile Include="GauseBlur.cpp" />
-    <ClCompile Include="LayerStyle.cpp" />
+    <ClCompile Include="Effect\Firework.cpp" />
+    <ClCompile Include="Effect\GauseBlur.cpp" />
+    <ClCompile Include="Effect\POINT.cpp" />
+    <ClCompile Include="Effect\RectShadow.cpp" />
+    <ClCompile Include="Effect\TImage.cpp" />
     <ClCompile Include="Poker\CardTurnOverAnimation.cpp" />
     <ClCompile Include="Dialog\DialogChooseLevel.cpp" />
     <ClCompile Include="Animation\ParallelAnimation.cpp" />
-    <ClCompile Include="POINT.cpp" />
     <ClCompile Include="Poker\Restore.cpp" />
     <ClCompile Include="Animation\SequentialAnimation.cpp" />
-    <ClCompile Include="RectShadow.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Poker\PMove.cpp" />
@@ -110,7 +110,6 @@
     <ClCompile Include="Poker\Manager.cpp" />
     <ClCompile Include="Poker\Poker.cpp" />
     <ClCompile Include="Poker\ReleaseCorner.cpp" />
-    <ClCompile Include="TImage.cpp" />
     <ClCompile Include="Control\TRadioButtonGroup.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -126,14 +125,14 @@
     <ClInclude Include="Control\tstring.h" />
     <ClInclude Include="Dialog\DialogSearch.h" />
     <ClInclude Include="Dialog\DialogAuto.h" />
-    <ClInclude Include="Firework.h" />
-    <ClInclude Include="GauseBlur.h" />
-    <ClInclude Include="LayerStyle.h" />
+    <ClInclude Include="Effect\Firework.h" />
+    <ClInclude Include="Effect\GauseBlur.h" />
+    <ClInclude Include="Effect\POINT.h" />
+    <ClInclude Include="Effect\RectShadow.h" />
+    <ClInclude Include="Effect\TImage.h" />
     <ClInclude Include="Poker\CardTurnOverAnimation.h" />
     <ClInclude Include="Dialog\DialogChooseLevel.h" />
-    <ClInclude Include="POINT.h" />
     <ClInclude Include="Poker\Restore.h" />
-    <ClInclude Include="RectShadow.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Animation\SequentialAnimation.h" />
     <ClInclude Include="Animation\SettingAnimation.h" />
@@ -147,7 +146,6 @@
     <ClInclude Include="Poker\Manager.h" />
     <ClInclude Include="Poker\Poker.h" />
     <ClInclude Include="Poker\ReleaseCorner.h" />
-    <ClInclude Include="TImage.h" />
     <ClInclude Include="Animation\ValueAnimation.h" />
     <ClInclude Include="Control\TRadioButtonGroup.h" />
   </ItemGroup>

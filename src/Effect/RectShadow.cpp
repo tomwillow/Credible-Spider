@@ -7,8 +7,7 @@
 #include "POINT.h"
 
 //创建位图，返回HBITMAP，传入指针地址，修改数据可直接影响位图
-//来自：为GDI函数增加透明度处理 by启程软件
-//https://www.cnblogs.com/setoutsoft/p/4086051.html
+//来自：https://github.com/setoutsoft/soui/blob/master/components/render-gdi/render-gdi.cpp
 HBITMAP CreateGDIBitmap(int nWid, int nHei, void** ppBits)
 {
 	BITMAPINFO bmi;
@@ -43,8 +42,9 @@ RectShadow::RectShadow(HDC hdc,HWND hWnd,const RECT& rc, int d, double angleDEG,
 	//初始化HDC和HBITMAP
 	hdcShadow = CreateCompatibleDC(hdc);
 	BYTE* pb = nullptr;
-	hBitmapShadow = CreateGDIBitmap(width, height, (void**)&pb);
+	HBITMAP hBitmapShadow = CreateGDIBitmap(width, height, (void**)&pb);
 	SelectObject(hdcShadow, hBitmapShadow);
+	DeleteObject(hBitmapShadow);
 
 	//alpha通道设置为0xff
 	UINT* pu = (UINT*)pb;
@@ -75,7 +75,6 @@ RectShadow::RectShadow(HDC hdc,HWND hWnd,const RECT& rc, int d, double angleDEG,
 RectShadow::~RectShadow()
 {
 	ReleaseDC(hWnd,hdcShadow);
-	DeleteObject(hBitmapShadow);
 }
 
 void RectShadow::Draw(HDC hdc)

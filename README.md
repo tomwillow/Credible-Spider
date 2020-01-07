@@ -1,5 +1,4 @@
-# 可靠蜘蛛纸牌
-# Credible-Spider
+# 可靠蜘蛛纸牌 Credible-Spider
 
 保证每一把都是可解问题的蜘蛛纸牌。
 The spider solitaire game that each game is certain to be solved.
@@ -17,4 +16,4 @@ The purpose of this project is in below:
    Realize a like-Windows spider solitaire, added the "Credible Game", "Auto-Play" function. (finished)
 
 ## 可靠牌局 Credible game
-![](https://github.com/tomwillow/Credible-Spider/snap/credible game.png)
+![]("https://github.com/tomwillow/Credible-Spider/snap/credible game.png")

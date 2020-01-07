@@ -16,4 +16,4 @@ The purpose of this project is in below:
    Realize a like-Windows spider solitaire, added the "Credible Game", "Auto-Play" function. (finished)
 
 ## 可靠牌局 Credible game
-![](https://github.com/tomwillow/Credible-Spider/blob/master/snap/credible game.PNG)
+![](https://github.com/tomwillow/Credible-Spider/blob/master/snap/credible%20game.PNG)

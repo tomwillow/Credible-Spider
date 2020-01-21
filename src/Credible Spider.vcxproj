@@ -40,14 +40,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)Effect;$(SolutionDir)Control;$(SolutionDir)Dialog;$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)..\$(Configuration)\</OutDir>
-    <IntDir>..\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir);$(SolutionDir)Common;$(SolutionDir)Effect;$(SolutionDir)Control;$(SolutionDir)Dialog;$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)..\$(Configuration)_$(ProjectName)\</OutDir>
+    <IntDir>..\$(Configuration)_$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)Control;$(SolutionDir)Dialog;$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)..\$(Configuration)\</OutDir>
-    <IntDir>..\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir);$(SolutionDir)Common;$(SolutionDir)Effect;$(SolutionDir)Control;$(SolutionDir)Dialog;$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)..\$(Configuration)_$(ProjectName)\</OutDir>
+    <IntDir>..\$(Configuration)_$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -84,11 +84,15 @@
     <ClCompile Include="Control\TControl.cpp" />
     <ClCompile Include="Control\TEdit.cpp" />
     <ClCompile Include="Control\TGroupBox.cpp" />
+    <ClCompile Include="Control\TListView.cpp" />
     <ClCompile Include="Control\TStatic.cpp" />
     <ClCompile Include="Control\tstring.cpp" />
+    <ClCompile Include="Control\TTabControl.cpp" />
+    <ClCompile Include="Dialog\DialogHighScore.cpp" />
     <ClCompile Include="Dialog\DialogSearch.cpp" />
     <ClCompile Include="Dialog\DialogAbout.cpp" />
     <ClCompile Include="Dialog\DialogAuto.cpp" />
+    <ClCompile Include="Draw.cpp" />
     <ClCompile Include="Effect\Firework.cpp" />
     <ClCompile Include="Effect\GauseBlur.cpp" />
     <ClCompile Include="Effect\POINT.cpp" />
@@ -99,6 +103,7 @@
     <ClCompile Include="Animation\ParallelAnimation.cpp" />
     <ClCompile Include="Poker\Restore.cpp" />
     <ClCompile Include="Animation\SequentialAnimation.cpp" />
+    <ClCompile Include="ReturnType.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Poker\PMove.cpp" />
@@ -121,10 +126,15 @@
     <ClInclude Include="Control\TControl.h" />
     <ClInclude Include="Control\TEdit.h" />
     <ClInclude Include="Control\TGroupBox.h" />
+    <ClInclude Include="Control\TListView.h" />
     <ClInclude Include="Control\TStatic.h" />
     <ClInclude Include="Control\tstring.h" />
+    <ClInclude Include="Control\TTabControl.h" />
+    <ClInclude Include="Dialog\DialogHighScore.h" />
+    <ClInclude Include="Dialog\DialogAbout.h" />
     <ClInclude Include="Dialog\DialogSearch.h" />
     <ClInclude Include="Dialog\DialogAuto.h" />
+    <ClInclude Include="Draw.h" />
     <ClInclude Include="Effect\Firework.h" />
     <ClInclude Include="Effect\GauseBlur.h" />
     <ClInclude Include="Effect\POINT.h" />
@@ -136,6 +146,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Animation\SequentialAnimation.h" />
     <ClInclude Include="Animation\SettingAnimation.h" />
+    <ClInclude Include="ReturnType.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="Poker\PMove.h" />

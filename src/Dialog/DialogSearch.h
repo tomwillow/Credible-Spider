@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "Manager.h"
 #include "TButton.h"
 #include "TStatic.h"
 
@@ -19,6 +20,7 @@ private:
 	std::vector<TStatic> vecStatic;
 public:
 	std::shared_ptr<uint32_t> pSeed;
+	std::shared_ptr<int> pCalc;
 
 	enum { IDD = IDD_DIALOG_SEARCH };
 

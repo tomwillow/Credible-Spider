@@ -2,6 +2,7 @@
 
 #include "Configuration.h"
 #include "DialogChooseLevel.h"
+#include "DialogHighScore.h"
 #include "DialogAuto.h"
 #include "DialogAbout.h"
 
@@ -14,35 +15,6 @@ using namespace std;
 
 extern Configuration config;
 const string savFileName = "credible spider.sav";
-
-void DrawTextAdvance(HDC hdc, const TCHAR text[], RECT* rect, long FontSize, int FontWeight, COLORREF color, const TCHAR FontName[], UINT format, int cEscapement = 0, int cOrientation = 0)
-{
-	long lfHeight = -MulDiv(FontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
-	HFONT hf = CreateFont(lfHeight, 0, cEscapement, cOrientation, FontWeight, 0, 0, 0, 0, 0, 0, 0, 0, FontName);
-
-	SetBkMode(hdc, TRANSPARENT);
-	SelectObject(hdc, hf);
-	COLORREF crPrev = SetTextColor(hdc, color);
-	DrawText(hdc, text, -1, rect, format);
-	SetTextColor(hdc, crPrev);
-	DeleteObject(hf);
-}
-
-void DrawTextCenter(HDC hdc, const TCHAR text[], const RECT& rect, long FontSize, int FontWeight, COLORREF color, const TCHAR FontName[], UINT format)
-{
-	RECT rectText = rect;
-	DrawTextAdvance(hdc, text, &rectText, FontSize, FontWeight, color, FontName, format | DT_CALCRECT);
-
-	int width = rectText.right - rectText.left;
-	int height = rectText.bottom - rectText.top;
-
-	rectText.left = (rect.right + rect.left) / 2 - width / 2;
-	rectText.top = (rect.bottom + rect.top) / 2 - height / 2;
-	rectText.right = rectText.left + width;
-	rectText.bottom = rectText.top + height;
-
-	DrawTextAdvance(hdc, text, &rectText, FontSize, FontWeight, color, FontName, format);
-}
 
 
 LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -60,9 +32,6 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	imgBackground = new TImage(GetModuleHandle(NULL), IDB_BACKGROUND);
 	hdcBackground = CreateCompatibleDC(NULL);
 
-	//提示框
-	hBrushTipBox = CreateSolidBrush(crTipBox);
-
 	//rectShadow = nullptr;
 
 	//初始化manager
@@ -71,11 +40,8 @@ LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	manager->SetGUIProperty(m_hWnd, &rcClient, IDB_CARDEMPTY, IDB_CARDBACK, IDB_CARD1, IDB_CARDMASK);
 
 	//加载配置
-	if (config.LoadFromFile(savFileName) == false)
-	{
-		config.enableAnimation = false;
-		config.enableSound = true;
-	}
+	config.ReadFromFile(savFileName);
+
 	CheckMenuItem(GetMenu(), ID_ENABLE_ANIMATION, config.enableAnimation ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(GetMenu(), ID_ENABLE_SOUND, config.enableSound ? MF_CHECKED : MF_UNCHECKED);
 
@@ -136,7 +102,6 @@ LRESULT MainWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	ReleaseDC(hdcMem);
 
 	DeleteDC(hdcBackground);
-	DeleteObject(hBrushTipBox);
 	PostQuitMessage(0);
 	return 0;
 }
@@ -148,24 +113,15 @@ void MainWindow::Draw(HDC hdc, const RECT& rect)
 	//贴上背景
 	BitBlt(hdc, 0, 0, rect.right, rect.bottom, hdcBackground, 0, 0, SRCCOPY);
 
-	//绘制牌局
-	manager->Draw(hdc, rect);
 
 	//绘制阴影
 	//rectShadow->Draw(hdc);
 
 	//绘制TipBox
-	if (manager->HasPoker())
-	{
-		textTipBox = "分数：" + std::to_string(manager->GetPokerScore()) + "\r\n";
-		textTipBox += "操作：" + std::to_string(manager->GetPokerOperation());
-	}
+	tipBox.Draw(hdc, manager);
 
-	SelectObject(hdc, GetStockPen(BLACK_PEN));
-	SelectObject(hdc, hBrushTipBox);
-	Rectangle(hdc, rectTipBox.left, rectTipBox.top, rectTipBox.right, rectTipBox.bottom);
-
-	DrawTextCenter(hdc, textTipBox.c_str(), rectTipBox, 12, 400, RGB(255, 255, 255), TEXT("宋体"), DT_LEFT);
+	//绘制牌局
+	manager->Draw(hdc, rect);
 }
 
 LRESULT MainWindow::OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -213,12 +169,7 @@ LRESULT MainWindow::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	//因为WM_SIZE会手动发送，所以rcClient不能取用wParam中的值
 	GetClientRect(&rcClient);
 
-	//刷新提示框位置
-	rectTipBox.left = (rcClient.right - TIPBOX_WIDTH) / 2;
-	rectTipBox.right = rectTipBox.left + TIPBOX_WIDTH;
-	rectTipBox.bottom = rcClient.bottom - border;
-	rectTipBox.top = rectTipBox.bottom - TIPBOX_HEIGHT;
-
+	tipBox.OnSize(rcClient, border);
 
 	HDC hdc = GetDC();
 
@@ -274,23 +225,29 @@ LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	static bool bOpenDialog = true;
-	static int suit = 0;
-	static bool isRandom = true;
-	static uint32_t seed = 0;
+	static ReturnType ret = { 0 };
+
+	if (wNotifyCode==2)
+	{
+		ReturnType* pret = (ReturnType*)hWndCtl;
+		bOpenDialog = false;
+		ret = *pret;
+		delete pret;
+	}
+
 	if (bOpenDialog)
 	{
 		DialogChooseLevel dialogChooseLevel;
 		dialogChooseLevel.DoModal();
 		if (dialogChooseLevel.ret)
 		{
-			isRandom = dialogChooseLevel.ret->isRandom;
-			suit = dialogChooseLevel.ret->suit;
-			seed = dialogChooseLevel.ret->seed;
+			ret = *dialogChooseLevel.ret;
 		}
 		else
-			suit = 0;
+			ret.suit = 0;
 	}
-	if (suit != 0)
+
+	if (ret.suit != 0)
 	{
 		if (manager->bOnThread)
 		{
@@ -306,11 +263,12 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 		{
 			EnableAllInput(false);
 
-			if (isRandom)
+
+			if (ret.isRandom)
 				//随机新游戏
 				manager->Command("newrandom " + std::to_string(suit));
 			else
-				manager->Command("new " + std::to_string(suit) + " " + std::to_string(seed));
+				manager->Command("new " + std::to_string(suit) + " " + std::to_string(ret.seed));
 
 			//若发牌途中退出
 			if (manager->bStopThread)
@@ -318,9 +276,12 @@ LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 
 			EnableAllInput(true);
 
+			//
+			config.UpdateRecord(manager->GetPokerSuitNum(),manager->GetPokerSeed(),manager->GetPokerScore(),false,ret.calc);
+
 			RefreshMenu();
 		};
-		thread t(fun, suit);
+		thread t(fun, ret.suit);
 		t.detach();
 	}
 
@@ -466,7 +427,7 @@ LRESULT MainWindow::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	}
 	else
 	{
-		if (PtInRect(&rectTipBox, ptPos))
+		if (PtInRect(&tipBox.GetRect(), ptPos))
 			manager->ShowOneHint();
 		else
 			if (manager->PtInRelease(ptPos))
@@ -478,6 +439,13 @@ LRESULT MainWindow::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 LRESULT MainWindow::OnShowMove(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	manager->ShowOneHint();
+	return 0;
+}
+
+LRESULT MainWindow::OnHighScore(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	DialogHighScore dialogHighScore(m_hWnd);
+	dialogHighScore.DoModal();
 	return 0;
 }
 
@@ -497,8 +465,13 @@ LRESULT MainWindow::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 		if (config.enableSound)
 			PlaySound((LPCSTR)IDR_WAVE_PUTDOWN, GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
 
+		config.UpdateRecord(manager->GetPokerSuitNum(), manager->GetPokerSeed(), manager->GetPokerScore());
+
 		if (manager->GetIsWon())
+		{
+			config.UpdateRecord(manager->GetPokerSuitNum(), manager->GetPokerSeed(), manager->GetPokerScore(),true);
 			manager->Win();
+		}
 
 		RefreshMenu();
 
@@ -535,9 +508,14 @@ LRESULT MainWindow::OnAuto(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 {
 	DialogAuto dialogAuto(manager);
 	dialogAuto.DoModal();
+	auto ret = dialogAuto.ret;
+
+	config.UpdateRecord(manager->GetPokerSuitNum(), manager->GetPokerSeed(), manager->GetPokerScore(),ret->solved,ret->calc);
 
 	if (manager->GetIsWon())
+	{
 		manager->Win();
+	}
 
 	RefreshMenu();
 

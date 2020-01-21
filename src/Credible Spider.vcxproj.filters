@@ -117,6 +117,21 @@
     <ClCompile Include="Effect\GauseBlur.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Draw.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\TListView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Dialog\DialogHighScore.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\TTabControl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ReturnType.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
@@ -222,6 +237,24 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Effect\Firework.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Dialog\DialogAbout.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Draw.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\TListView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Dialog\DialogHighScore.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\TTabControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ReturnType.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

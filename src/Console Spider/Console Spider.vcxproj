@@ -71,13 +71,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir);$(SolutionDir)Poker;$(IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)..\$(Configuration)\</OutDir>
-    <IntDir>..\..\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)..\$(Configuration)_$(ProjectName)\</OutDir>
+    <IntDir>..\..\$(Configuration)_$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir);$(SolutionDir)Poker;$(IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)..\$(Configuration)\</OutDir>
-    <IntDir>..\..\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)..\$(Configuration)_$(ProjectName)\</OutDir>
+    <IntDir>..\..\$(Configuration)_$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir);$(SolutionDir)Animation;$(SolutionDir)Poker;$(IncludePath)</IncludePath>
@@ -118,6 +118,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,6 +134,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

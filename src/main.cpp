@@ -5,6 +5,10 @@
 #include "Configuration.h"
 #include <string>
 
+//dpi
+#include <ShellScalingAPI.h>
+#pragma comment(lib,"Shcore.lib")
+
 CComModule _Module;
 
 using namespace std;
@@ -16,6 +20,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hInstPrev,
 	LPSTR szCmdLine, int nCmdShow)
 {
 	InitCommonControls();
+	//SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 	_Module.Init(NULL, hInst);
 
 	MainWindow wndMain;

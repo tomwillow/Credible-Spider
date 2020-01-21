@@ -13,6 +13,12 @@ private:
 	TCheckBox checkboxAnimation;
 	std::shared_ptr<Manager> manager;
 public:
+	struct RetData
+	{
+		bool solved;
+		int calc;
+	};
+	std::shared_ptr<RetData> ret;
 	DialogAuto(std::shared_ptr<Manager> manager) :manager(manager) {}
 
 	enum { IDD = IDD_DIALOG_AUTO };

@@ -8,9 +8,9 @@
 #include <thread>
 #include "resource.h"
 #include "Card.h"
-#include "TImage.h"
 
 #ifndef _CONSOLE
+#include "TImage.h"
 #include "SequentialAnimation.h"
 #include "SettingAnimation.h"
 #include "ValueAnimation.h"

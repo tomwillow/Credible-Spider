@@ -6,6 +6,8 @@
 #include <sstream>
 #include <set>
 #include <algorithm>
+#include <random>
+#include <thread>
 #include <memory>
 #include <unordered_set>
 #include <typeinfo>
@@ -34,8 +36,6 @@ extern Configuration config;
 
 #endif
 
-#include <thread>
-//#define _PRINT
 //#define _PAUSE
 
 using namespace std;
@@ -134,7 +134,6 @@ bool Manager::Move(Poker* poker, istream& in)
 
 void Manager::NewGame(istream& in, bool isRandom)
 {
-
 	int suitNum;
 	uint32_t seed;
 #ifdef _CONSOLE
@@ -161,10 +160,10 @@ void Manager::NewGame(istream& in, bool isRandom)
 	delete poker;
 	poker = new Poker;
 
-	shared_ptr<Action> action(new Deal(suitNum, seed, config.enableSound, soundDeal));
-	action->Do(poker);
 
 #ifndef _CONSOLE
+	shared_ptr<Action> action(new Deal(suitNum, seed, config.enableSound, soundDeal));
+	action->Do(poker);
 	if (idCardEmpty && idCardBack && idCard1 && idCardMask)
 		InitialImage();
 	if (poker->hasGUI)
@@ -179,6 +178,8 @@ void Manager::NewGame(istream& in, bool isRandom)
 		}
 	}
 #else
+	shared_ptr<Action> action(new Deal(suitNum, seed, false, 0));
+	action->Do(poker);
 	cout << *poker;
 #endif
 }
@@ -202,7 +203,11 @@ void Manager::NewGameSolved(istream& in)
 		poker = new Poker;
 
 		seed = e();
+#ifdef _CONSOLE
+		shared_ptr<Action> action(new Deal(suitNum, seed, false, 0));
+#else
 		shared_ptr<Action> action(new Deal(suitNum, seed, config.enableSound, soundDeal));
+#endif
 		action->Do(poker);
 
 #ifndef _CONSOLE
@@ -237,17 +242,18 @@ bool Manager::Command(const string command)
 #ifdef _CONSOLE
 void Manager::ShowHelpInfo() const
 {
+	static string sep(20, '-');
 	if (!poker)
 	{
-		cout << "--Command Line Help--" << endl;
+		cout << sep <<" Command Line Help "<<sep << endl;
 		cout << "new : new game" << endl;
 		cout << "newrandom : new random game" << endl;
 		cout << "newsolved : new solved game" << endl;
-		cout << "--Help End--" << endl << endl;
+		cout << sep << " Help End " << sep << endl << endl;
 	}
 	else
 	{
-		cout << "--Command Line Help--" << endl;
+		cout << sep << "--Command Line Help--"<<sep << endl;
 		cout << "auto" << endl;
 		cout << "a add13" << endl;
 		cout << "h help" << endl;
@@ -260,20 +266,20 @@ void Manager::ShowHelpInfo() const
 		cout << "redo" << endl;
 		cout << "save" << endl;
 		cout << "exit" << endl;
-		cout << "--Help End--" << endl << endl;
+		cout << sep << " Help End " << sep << endl << endl;
 	}
 }
 #endif
 
 bool Manager::ReadIn(istream& in)
 {
-#ifdef _CONSOLE
-	ShowHelpInfo();
-#endif
 	string command;
 	bool success = true;
 	while (1)
 	{
+#ifdef _CONSOLE
+	ShowHelpInfo();
+#endif
 		cout << ">>";
 		if (!(in >> command))
 			break;
@@ -301,7 +307,9 @@ bool Manager::ReadIn(istream& in)
 		if (command == "auto")
 		{
 			int bPlayAnimation = 0;
+#ifndef _CONSOLE
 			in >> bPlayAnimation;
+#endif
 
 			success = AutoSolve(bPlayAnimation);
 
@@ -324,7 +332,7 @@ bool Manager::ReadIn(istream& in)
 #ifdef _CONSOLE
 		if (command == "h")
 		{
-			showHelpInfo();
+			ShowHelpInfo();
 			continue;
 		}
 #endif
@@ -345,7 +353,11 @@ bool Manager::ReadIn(istream& in)
 		}
 		if (command == "r")//release
 		{
+#ifdef _CONSOLE
+			shared_ptr<Action> action(new ReleaseCorner(false, 0));
+#else
 			shared_ptr<Action> action(new ReleaseCorner(config.enableSound, soundDeal));
+#endif
 			if (success = action->Do(poker))
 			{
 				record.push_back(action);
@@ -520,7 +532,11 @@ std::vector<Manager::Node> Manager::GetAllOperator(std::vector<int>& emptyIndex,
 	if (emptyIndex.empty() && !poker->corner.empty())
 	{
 		shared_ptr<Poker> newPoker(new Poker(*poker));
+#ifdef _CONSOLE
+		shared_ptr<Action> action(new ReleaseCorner(false, 0));
+#else
 		shared_ptr<Action> action(new ReleaseCorner(config.enableSound, soundDeal));
+#endif
 		action->Do(newPoker.get());
 		actions.push_back({ poker->GetValue() - 100,newPoker,action });
 	}
@@ -537,9 +553,14 @@ bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shar
 	}
 
 	//操作次数超出限制，计算量超出限制
-	if (poker->operation >= stackLimited || calc >= calcLimited || bStopThread)
+	if (calc >= calcLimited || bStopThread)
 	{
 		return true;
+	}
+
+	if (poker->operation >= stackLimited)
+	{
+		return false;
 	}
 
 	calc++;
@@ -598,18 +619,32 @@ bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shar
 				for (int i = 0; i < poker->desk.size(); ++i)
 				{
 					auto& cards = poker->desk[i];
-					if (cards.size() > 1 && cards.back().point < minPoint)
+					if (cards.size() > 1 && cards.back().point < minPoint)//牌数>=2，把上面的挪到旁边去
 					{
 						minPoint = cards.back().point;
 						orig = i;
 					}
 				}
 
-				//只添加一个移牌补空位的操作
-				shared_ptr<Action> action(new PMove(orig, emptyIndex.front(), 1));
-				shared_ptr<Poker> newPoker(new Poker(*poker));
-				action->Do(newPoker.get());
-				actions.push_back({ newPoker->GetValue(),newPoker,action });
+				if (minPoint == 14)//说明总牌数小于10张，强行发牌
+				{
+					shared_ptr<Poker> newPoker(new Poker(*poker));
+#ifdef _CONSOLE
+					shared_ptr<Action> action(new ReleaseCorner(false, 0));
+#else
+					shared_ptr<Action> action(new ReleaseCorner(config.enableSound, soundDeal));
+#endif
+					action->Do(newPoker.get());
+					actions.push_back({ poker->GetValue() - 100,newPoker,action });
+				}
+				else
+				{
+					//只添加一个移牌补空位的操作
+					shared_ptr<Action> action(new PMove(orig, emptyIndex.front(), 1));
+					shared_ptr<Poker> newPoker(new Poker(*poker));
+					action->Do(newPoker.get());
+					actions.push_back({ newPoker->GetValue(),newPoker,action });
+				}
 			}
 		}
 	}
@@ -624,7 +659,8 @@ bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shar
 	{
 		auto& node = *it;
 
-#ifdef _PRINT
+//#define _PAUSE
+#ifdef _PAUSE
 		cout << *poker;
 
 		//可以的操作
@@ -634,10 +670,9 @@ bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shar
 
 		//显示操作
 		cout << string(20, '-');
+		cout << "Calc=" << calc << " ";
 		cout << "Do:" << *node.action << endl;
-#endif
 
-#ifdef _PAUSE
 		//此处暂停
 		//按任意键则走一步，输入数字则直到stack==round才停下
 		if (poker->operation < round)
@@ -647,6 +682,8 @@ bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shar
 		else
 		{
 			string s;
+			cout << "input the destination operation number:" << endl;
+			cout << ">>";
 			getline(cin, s);
 			if (s.empty())
 				round = -1;
@@ -740,10 +777,10 @@ bool Manager::AutoSolve(bool playAnimation)
 	autoSolveResult.suit = poker->suitNum;
 	autoSolveResult.seed = poker->seed;
 
-	//1花色时，200可以解出70/100个；500可以解出89/100个；1000可以解出92/100个；8000可以解出98/100个
+	//1花色时，200可以解出83/100个；500可以解出90/100个；1000可以解出92/100个；2000可以解出93/100个；8000可以解出98/100个
 	//2花色时，2000可以解出23/100个；8000可以解出32/100个
 	//4花色时，100000解出0/6个
-	int calcLimited = 2000;
+	int calcLimited = 1000;
 
 	//480时栈溢出，所以必须小于480。不建议提高保留栈大小
 	int stackLimited = 400;
@@ -762,9 +799,9 @@ bool Manager::AutoSolve(bool playAnimation)
 	SetWindowText(hWnd, origTitle.c_str());
 #else
 	//输出计算量
-	cout << "Calculation:" << calc << endl;
+	cout << "Calculation:" << autoSolveResult.calc << endl;
 
-	if (success == true)
+	if (autoSolveResult.success == true)
 	{
 		//输出步骤
 		cout << "Finished. Step = " << record.size() << endl;
@@ -774,7 +811,7 @@ bool Manager::AutoSolve(bool playAnimation)
 	else
 	{
 		//输出失败原因
-		if (calc >= calcLimited)
+		if (autoSolveResult.calc >= calcLimited)
 			cout << "Calculation number >= " << calcLimited << endl;
 		else
 			cout << "Call-stack depth >= " << stackLimited << endl;

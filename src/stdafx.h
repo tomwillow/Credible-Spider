@@ -13,11 +13,3 @@ extern CComModule _Module;  // È«¾Ö_Module
 #include "resource.h"
 
 #pragma comment(lib,"comctl32.lib")
-
-
-#include "Manager.h"
-
-#define TIPBOX_WIDTH 200
-#define TIPBOX_HEIGHT 100
-
-extern COLORREF crTipBox;

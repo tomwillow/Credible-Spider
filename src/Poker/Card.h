@@ -3,15 +3,19 @@
 #include <string>
 #include <iostream>
 #include <memory>
+
+#ifndef _CONSOLE
 #include "TImage.h"
+#endif
 
 class Card
 {
 private:
-	//
+#ifndef _CONSOLE
 	int z_index;
 	bool visible;
 	std::shared_ptr<TImage> img, imgBack;
+#endif
 public:
 
 	int suit;//花色 1 2 3 4
@@ -21,19 +25,27 @@ public:
 	bool show;//是否已翻开
 
 	Card(int suit, int point, bool show) :
-		suit(suit), point(point), show(show),
-		visible(true),z_index(0),img(nullptr),imgBack(nullptr) {}
+		suit(suit), point(point), show(show)
+#ifndef _CONSOLE
+		,visible(true),z_index(0),img(nullptr),imgBack(nullptr)
+#endif
+	{}
 	Card(int suit, int point) :Card(suit,point,false) {}
 
-	Card(const Card& card):suit(card.suit),point(card.point),show(card.show),z_index(card.z_index),visible(card.visible),img(card.img),imgBack(card.imgBack)
+	Card(const Card& card):suit(card.suit),point(card.point),show(card.show)
+#ifndef _CONSOLE
+		,z_index(card.z_index),visible(card.visible),img(card.img),imgBack(card.imgBack)
+#endif
 	{
 
 	}
 
-	~Card()
+	void SetShow(bool show)
 	{
+		this->show = show;
 	}
 
+#ifndef _CONSOLE
 	void SetVisible(bool visible)
 	{
 		this->visible = visible;
@@ -47,11 +59,6 @@ public:
 	int GetZIndex() const
 	{
 		return z_index;
-	}
-
-	void SetShow(bool show)
-	{
-		this->show = show;
 	}
 
 	void SetPos(POINT pt)
@@ -89,6 +96,7 @@ public:
 		else
 			imgBack->Draw(hdc);
 	}
+#endif
 
 	//返回花色 C D H S
 	char getSuit() const

@@ -12,15 +12,20 @@ private:
 	bool success;
 	std::shared_ptr<Restore> restored;
 
+#ifndef _CONSOLE
 	POINT ptStart;
 	std::vector<POINT> vecStartPos, vecEndPos;
+#endif
 
 	bool enableSound;
 	int soundDeal;
 public:
 	ReleaseCorner(bool enableSound, int soundDeal) :Action(),
-		success(false), restored(nullptr), ptStart({ 0,0 }),
-		enableSound(enableSound), soundDeal(soundDeal)
+		success(false), restored(nullptr)
+#ifndef _CONSOLE
+		, ptStart({ 0,0 })
+#endif
+		,enableSound(enableSound), soundDeal(soundDeal)
 	{}
 
 	virtual ~ReleaseCorner() override;

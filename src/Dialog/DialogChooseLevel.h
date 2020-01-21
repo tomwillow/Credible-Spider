@@ -1,4 +1,7 @@
 #pragma once
+
+#include "ReturnType.h"
+
 #include "stdafx.h"
 #include "TButton.h"
 #include "TEdit.h"
@@ -17,13 +20,7 @@ private:
 	TRadioButtonGroup rbGroupLevel;
 	TRadioButtonGroup rbGroupSeed;
 public:
-	struct DialogChooseLevelReturnType
-	{
-		bool isRandom;
-		int suit;
-		uint32_t seed;
-	}; 
-	std::shared_ptr<DialogChooseLevelReturnType> ret;
+	std::shared_ptr<ReturnType> ret;
 
 	enum { IDD = IDD_CHOOSE_LEVEL };
 

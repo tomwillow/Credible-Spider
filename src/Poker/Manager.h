@@ -27,11 +27,11 @@ private:
 	bool hasLoadImage;
 	HWND hWnd;
 	const RECT* pRcClient;
-	int idCardEmpty, idCardBack, idCard1,idCardMask;
 	int soundTip, soundNoTip,soundWin,soundDeal;
+	int idCardEmpty, idCardBack, idCard1,idCardMask;
 	std::vector<TImage*> vecImgCardEmpty;
 	const int border = 10;
-	const int xBorder = 15;//finished
+	const int xBorder = 15;//已完成牌堆的横向距离
 	const int cardWidth = 71;
 	const int cardHeight = 96;
 	const int cardGapH = 10;
@@ -93,6 +93,7 @@ public:
 	//auto 显示动画
 	bool Command(const std::string cmd);
 	bool ReadIn(std::istream& in);
+	bool CanRedo();
 
 	//
 	bool bOnThread;
@@ -105,7 +106,6 @@ public:
 	void OnSize(const RECT &rect);
 	void Draw(HDC hdc,const RECT &rect);
 
-	bool CanRedo();
 	bool GetIsWon();
 
 	bool ShowOneHint();

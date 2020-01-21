@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "TImage.h"
 #include "Manager.h"
+#include "Draw.h"
 
 #include <memory>
 
@@ -12,9 +13,56 @@ private:
 	std::shared_ptr<Manager> manager;
 
 	const int border = 10;
-	std::string textTipBox;
-	HBRUSH hBrushTipBox;
-	RECT rectTipBox;
+
+	class TipBox
+	{
+	private:
+		const int tipBoxWidth = 200;
+		const int tipBoxHeight = 100;
+		const COLORREF crTipBox = 0x00007f00;
+		std::string textTipBox;
+		HBRUSH hBrushTipBox;
+		RECT rcTipBox;
+	public:
+		TipBox() :hBrushTipBox(CreateSolidBrush(crTipBox)) {}
+
+		~TipBox()
+		{
+			DeleteObject(hBrushTipBox);
+		}
+
+		void OnSize(const RECT& rcClient, int border)
+		{
+			//刷新提示框位置
+			rcTipBox.left = (rcClient.right - tipBoxWidth) / 2;
+			rcTipBox.right = rcTipBox.left + tipBoxWidth;
+			rcTipBox.bottom = rcClient.bottom - border;
+			rcTipBox.top = rcTipBox.bottom - tipBoxHeight;
+		}
+
+		void Draw(HDC hdc,std::shared_ptr<Manager> manager)
+		{
+			if (manager->HasPoker())
+			{
+				textTipBox = "分数：" + std::to_string(manager->GetPokerScore()) + "\r\n";
+				textTipBox += "操作：" + std::to_string(manager->GetPokerOperation());
+			}
+
+			SelectObject(hdc, GetStockPen(BLACK_PEN));
+			SelectObject(hdc, hBrushTipBox);
+			Rectangle(hdc, rcTipBox.left, rcTipBox.top, rcTipBox.right, rcTipBox.bottom);
+
+			Draw::DrawTextCenter(hdc, textTipBox.c_str(), rcTipBox, 12, 400, RGB(255, 255, 255), TEXT("宋体"), DT_LEFT);
+		}
+
+		const RECT& GetRect()
+		{
+			return rcTipBox;
+		}
+	};
+
+	TipBox tipBox;
+
 	//RectShadow* rectShadow;
 
 	RECT rcClient;
@@ -40,6 +88,7 @@ public:
 		COMMAND_ID_HANDLER(ID_RELEASE, OnRelease)
 		COMMAND_ID_HANDLER(ID_RELEASE2, OnRelease)
 		COMMAND_ID_HANDLER(ID_SHOWMOVE, OnShowMove)
+		COMMAND_ID_HANDLER(ID_SCORE, OnHighScore)
 		COMMAND_ID_HANDLER(ID_REDO, OnRedo)
 		COMMAND_ID_HANDLER(ID_AUTO, OnAuto)
 		COMMAND_ID_HANDLER(ID_ABOUT, OnAbout)
@@ -48,7 +97,7 @@ public:
 		COMMAND_ID_HANDLER(ID_ENABLE_SOUND, OnSetOption)
 	END_MSG_MAP()
 
-	MainWindow() :doubleBuffer(true), hBrushTipBox(0), imgBackground(nullptr) {}
+	MainWindow() :doubleBuffer(true), imgBackground(nullptr) {}
 
 	LRESULT MainWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT MainWindow::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -73,6 +122,7 @@ public:
 	LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnRelease(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnShowMove(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT MainWindow::OnHighScore(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnRedo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnAuto(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT MainWindow::OnAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);

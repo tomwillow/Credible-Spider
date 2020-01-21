@@ -21,6 +21,9 @@ LRESULT DialogAuto::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 
 	SetWindowPos(HWND_TOPMOST, dest.x,dest.y, rect.right, rect.bottom,SWP_NOSIZE);
 
+	ret = make_shared<RetData>();
+	*ret = { false,0 };
+
 	//CenterWindow();
 	return TRUE;    // let the system set the focus
 }
@@ -34,6 +37,7 @@ LRESULT DialogAuto::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 	}
 	else
 	{
+		manager->bStopThread = false;
 		EndDialog(0);
 	}
 	return 0;
@@ -56,7 +60,11 @@ LRESULT DialogAuto::OnBtnStart(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 		ss << "结果：" << (manager->autoSolveResult.success ? "成功" : "失败") << endl;
 		ss << "尝试次数：" << manager->autoSolveResult.calc;
 
+		ret->solved = manager->autoSolveResult.success;
+		ret->calc += manager->autoSolveResult.calc;
+
 		MessageBox(ss.str().c_str(), "求解结果", MB_OK | MB_ICONINFORMATION);
+
 
 		::SetWindowText(::GetDlgItem(m_hWnd, IDC_BUTTON_START), "开始");
 		checkboxAnimation.SetEnable(true);

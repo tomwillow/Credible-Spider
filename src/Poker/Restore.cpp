@@ -54,9 +54,11 @@ bool Restore::DoRestore(Poker* poker,int deskNum)
 		vector<Card> temp(poker->desk[deskNum].rbegin(), poker->desk[deskNum].rbegin() + 13);
 		poker->finished.push_back(temp);
 
+#ifndef _CONSOLE
 		//预存起点位置
 		if (poker->hasGUI)
 			for_each(temp.begin(), temp.end(), [&oper](const Card& card) {oper.vecStartPt.push_back(card.GetPos()); });
+#endif
 
 		//去掉牌堆叠的13张
 		poker->desk[deskNum].erase(poker->desk[deskNum].end() - 13, poker->desk[deskNum].end());

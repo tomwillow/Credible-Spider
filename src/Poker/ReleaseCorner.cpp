@@ -4,6 +4,8 @@
 #include "Restore.h"
 #include <assert.h>
 
+#include <algorithm>
+#include <numeric>
 #include <thread>
 #include "resource.h"
 #include "Card.h"
@@ -32,14 +34,23 @@ bool ReleaseCorner::Do(Poker* inpoker)
 	if (poker->corner.empty())
 		return false;
 
-	//有空位不能发牌
+	//有空位不能发牌，但总牌数小于10张不受限制
+	int sum = 0;
+	bool hasEmpty = false;
 	for (auto& cards : poker->desk)
+	{
+		sum += cards.size();
 		if (cards.empty())
-			return false;
+			hasEmpty = true;
+	}
+	if (hasEmpty && sum>=10)
+		return false;
 
+#ifndef _CONSOLE
 	//取得角落区坐标
 	if (poker->hasGUI)
 		ptStart = poker->corner.back().back().GetPos();
+#endif
 
 	//遍历一摞待发区牌
 	for (int i = 0; i < 10; ++i)

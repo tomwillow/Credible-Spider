@@ -21,6 +21,7 @@ public:
 	TControl();
 	virtual ~TControl();
 
+	TControl(const TControl& control);
 	TControl& operator=(const TControl& control);
 
 	HWND GetHWND();
@@ -41,11 +42,9 @@ public:
 	void SetFont(TCHAR FontName[], int FontSize);
 
 	void SetText(const std::tstring &s);
-	void CDECL SetText(const TCHAR szFormat[], ...);//设置内容
 	void GetText(TCHAR text[]);
-	TCHAR* GetTCHAR();//返回值由TControl自己负责释放
-	std::tstring GetText();
-	int GetLength();//获取字符串长度	
+	std::tstring GetText() const;
+	int GetLength() const;//获取字符串长度	
 
 	RECT GetPosition() const;
 	void SetPosition(int x, int y, int width, int height);//设置大小及位置
@@ -56,7 +55,6 @@ public:
 	bool GetVisible();
 
 	void SetDouble(double d);
-	double GetDouble();
 
 	virtual void SetEnable(bool bEnable);
 	virtual bool GetEnable();
@@ -70,7 +68,6 @@ protected:
 	HWND m_hParent;
 	HWND m_hWnd;
 	HINSTANCE m_hInst;
-	TCHAR *Text;
 	void RegisterProc();//创建窗口后注册
 
 	virtual LRESULT WndProc(WNDPROC wndproc, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);//虚拟消息处理函数，可覆盖

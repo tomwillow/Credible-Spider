@@ -10,6 +10,7 @@ using namespace std;
 LRESULT DialogSearch::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	pSeed = make_shared<uint32_t>();
+	pCalc = make_shared<int>();
 
 	btnCancel.LinkControl(m_hWnd, IDCANCEL);
 
@@ -74,6 +75,7 @@ LRESULT DialogSearch::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	}
 
 	pSeed = nullptr;
+	pCalc = nullptr;
 	EndDialog(0);
 	return 0;
 }
@@ -105,28 +107,36 @@ LRESULT DialogSearch::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	{
 	case IDOK:
 	{
+		//总线程
 		auto fun = [&]()
 		{
 			searchThreadIsRunning = true;
 			stopThread = false;
 
+			//单个搜索线程
 			auto search = [&](std::shared_ptr<Manager>& manager)
 			{
 				while (1)
 				{
+					//随机生成新牌局
 					manager->Command("newrandom " + to_string(suit));
 					if (manager->Command("auto"))
 					{
+						//完成搜索
 						*pSeed = manager->GetPokerSeed();
 						break;
 					}
 
+					//要求停止，则退出线程
 					if (manager->bStopThread)
 						break;
 				}
 			};
 
+			//所有manager
 			vecManager = vector<shared_ptr<Manager>>(coreNum, nullptr);
+
+			//每个manager依次开启
 			for (int i=0;i<coreNum;++i)
 			{
 				auto& manager = vecManager[i];
@@ -138,22 +148,28 @@ LRESULT DialogSearch::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 				t.detach();
 			}
 
+			//判别
 			shared_ptr<Manager> resultManager;
 			while (IsManagerOnThread() || stopThread==false)
 			{
 				this_thread::sleep_for(10ms);
 				bool found = false;
+
+				//寻找是否有线程已完成
 				for (auto& manager : vecManager)
 					if (manager->autoSolveResult.success == true)
 					{
+						//得到结果
 						resultManager = manager;
 						found = true;
 						break;
 					}
+
 				if (found)
 					break;
 			}
 
+			//停止所有搜索线程
 			StopManagerThread();
 
 			if (resultManager)
@@ -165,8 +181,11 @@ LRESULT DialogSearch::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 				ss << "尝试次数=" << resultManager->autoSolveResult.calc << endl;
 				ss << "难度=" << -10000.0 / resultManager->autoSolveResult.calc + 100.0 << endl;
 
+				*pCalc = resultManager->autoSolveResult.calc;
+
 				MessageBox(ss.str().c_str(), "求解结果", MB_OK | MB_ICONINFORMATION);
 				searchThreadIsRunning = false;
+
 				EndDialog(0);
 			}
 			searchThreadIsRunning = false;

@@ -15,8 +15,6 @@ TControl::TControl()
 	m_hParent = NULL;
 	m_hInst = NULL;
 
-	Text = NULL;
-
 	m_hFont = NULL;
 
 	bCanAcceptDrag = false;
@@ -25,11 +23,13 @@ TControl::TControl()
 
 TControl::~TControl()
 {
-	if (Text != NULL)
-		free(Text);
-
 	if (m_hFont!=NULL)
 	::DeleteObject(m_hFont);
+}
+
+TControl::TControl(const TControl& control)
+{
+	*this = control;
 }
 
 TControl& TControl::operator=(const TControl& control)
@@ -46,7 +46,7 @@ TControl& TControl::operator=(const TControl& control)
 
 	m_hParent = control.m_hParent;
 	m_hInst = control.m_hInst;
-	m_hWnd = CreateWindowEx(exstyle,className, GetTCHAR(),
+	m_hWnd = CreateWindowEx(exstyle,className, control.GetText().c_str(),
 		style,rcPos.left,rcPos.top, rc.right, rc.bottom, 
 		control.m_hParent, (HMENU)id, control.m_hInst, 0);
 	
@@ -247,36 +247,22 @@ void TControl::SetText(const tstring &s)
 	::SetWindowText(m_hWnd, s.c_str());
 }
 
-void CDECL TControl::SetText(const TCHAR szFormat[], ...)
-{
-	TCHAR szBuffer[1024];
-	va_list pArgList;
-	va_start(pArgList, szFormat);
-	_vsntprintf_s(szBuffer, sizeof(szBuffer) / sizeof(TCHAR), szFormat, pArgList);
-	va_end(pArgList);
-
-	::SetWindowText(m_hWnd, szBuffer);
-}
-
-
 void TControl::GetText(TCHAR text[])
 {
-	::GetWindowText(m_hWnd, text, GetLength() + 1);//不知道为什么要加1才取得全
+	::GetWindowText(m_hWnd, text, GetLength() + 1);
 }
 
-tstring TControl::GetText()
+tstring TControl::GetText() const
 {
-	return GetTCHAR();
+	int len = GetLength()+1;
+	TCHAR* temp = new TCHAR[len];
+	::GetWindowText(m_hWnd, temp, len);
+	tstring s(temp);
+	delete[] temp;
+	return s;
 }
 
-TCHAR * TControl::GetTCHAR()
-{
-	Text = (TCHAR *)realloc(Text, (GetLength() + 1)*sizeof(TCHAR));
-	GetText(Text);
-	return Text;
-}
-
-int TControl::GetLength()
+int TControl::GetLength() const
 {
 	return ::GetWindowTextLength(m_hWnd);
 }
@@ -306,11 +292,6 @@ void TControl::SetDouble(double d)
 {
 	tstring s(tto_string(d));
 	SetText(s);
-}
-
-double TControl::GetDouble()
-{
-	return _tcstod(GetTCHAR(), NULL);
 }
 
 //获得工具栏大小

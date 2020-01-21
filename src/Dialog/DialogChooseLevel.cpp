@@ -10,10 +10,11 @@ using namespace std;
 
 LRESULT DialogChooseLevel::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	ret = make_shared<DialogChooseLevelReturnType>();
+	ret = make_shared<ReturnType>();
 	ret->isRandom = true;
 	ret->suit = 1;
 	ret->seed = 0;
+	ret->solved = false;
 
 	editSeed.LinkControl(m_hWnd, IDC_EDIT_SEED);
 	editSeed.SetEnable(false);
@@ -95,8 +96,11 @@ LRESULT DialogChooseLevel::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 			dialogSearch.DoModal();
 			if (dialogSearch.pSeed)
 			{
+				//ËÑË÷³É¹¦
 				ret->isRandom = false;
 				ret->seed = *dialogSearch.pSeed;
+				ret->calc = *dialogSearch.pCalc;
+				ret->solved = true;
 				EndDialog(0);
 			}
 			break;

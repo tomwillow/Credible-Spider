@@ -13,8 +13,10 @@ private:
 	{
 		int origDeskIndex;//回收源堆叠序号
 		bool shownLastCard;//回收后底牌是否翻出
+#ifndef _CONSOLE
 		std::vector<POINT> vecStartPt;
 		POINT ptEnd;
+#endif
 	};
 
 	//已回收成功的操作

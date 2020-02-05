@@ -15,24 +15,24 @@
 class DialogEvaluate :public CDialogImpl<DialogEvaluate>
 {
 private:
-	bool openedMsgBox;
 
 	//线程进行标记
 	bool onThread;
 
-	//停止线程标记
-	bool stop;
+	//manager指针集
+	std::unordered_set<std::shared_ptr<Manager>> managers;
 
 	//线程数
 	int threadNum;
 	int suit;
+
+	//输入评估组
 	std::vector<ReturnType> input;
 
 	TButton btnCancel;
 	TStatic staticMemo;
 	std::vector<TStatic> vecStatic;
 
-	std::unordered_set<std::shared_ptr<Manager>> managers;
 public:
 	std::shared_ptr<std::unordered_map<uint32_t, ReturnType>> ret;
 
@@ -44,7 +44,7 @@ public:
 		MESSAGE_HANDLER(WM_COMMAND, OnCommand)
 	END_MSG_MAP()
 
-	DialogEvaluate(int suit,std::vector<ReturnType> input) :suit(suit),input(input),openedMsgBox(false){}
+	DialogEvaluate(int suit,std::vector<ReturnType> input) :suit(suit),input(input){}
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 

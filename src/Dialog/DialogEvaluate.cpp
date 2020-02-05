@@ -77,32 +77,12 @@ LRESULT DialogEvaluate::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT DialogEvaluate::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (onThread)
-	{
-		stop = true;
-		PostMessage(WM_CLOSE);
-		return 0;
-	}
+	//通知manager停止
+	for (auto& manager : managers)
+		manager->bStopThread = true;
 
-
-	//统计评估数
-	int solvedNum = 0;
-	for (auto& pr : *ret)
-		if (pr.second.solved)
-			solvedNum++;
-
-	//弹窗
-	stringstream ss;
-	ss << "评估已结束。" << endl << endl;
-	ss << "完成评估：" << solvedNum << "/" << ret->size();
-
-	if (openedMsgBox == false)
-	{
-		openedMsgBox = true;
-		MessageBox(ss.str().c_str(), "评估结束", MB_OK | MB_ICONINFORMATION);
-	}
-
-	EndDialog(0);
+	if (onThread == false)
+		EndDialog(0);
 
 	return 0;
 }
@@ -120,13 +100,10 @@ LRESULT DialogEvaluate::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 		{
 			onThread = true;
 
-			//总处理数
-			int evalNum = input.size();
-
 			//已处理数
-			int finished = 0;
+			int solvedNum = 0;
 
-			std::mutex m;
+			mutex m;
 
 			//加入待处理队列
 			queue<ReturnType> q;
@@ -151,14 +128,19 @@ LRESULT DialogEvaluate::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 					auto raw = q.front();
 					q.pop();
 
+					//新建manager并加入managers
 					shared_ptr<Manager> manager = make_shared<Manager>(suit, raw.seed);
 					managers.insert(manager);
 
 					m.unlock();
 
-					vecStatic[index].SetText("线程" + to_string(index)+" 种子="+to_string(raw.seed));
+					//设置控件
+					vecStatic[index].SetText("线程" + to_string(index) + " 种子=" + to_string(raw.seed));
 					manager->SetTextOutputHWND(vecStatic[index].GetHWND());
-					manager->Command("auto");
+
+					//开始评估
+					if (manager->Command("auto"))
+						solvedNum++;
 
 					m.lock();
 
@@ -166,31 +148,29 @@ LRESULT DialogEvaluate::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 					(*ret)[raw.seed].solved = manager->autoSolveResult.success;
 					(*ret)[raw.seed].calc = manager->autoSolveResult.calc;
 
-					//累加完成数
-					finished++;
 					m.unlock();
+
+					//设置控件
 					vecStatic[index].SetText("线程" + to_string(index) + " 已退出。");
 				}
 			};
 
-			//启动线程
+			//创建线程
+			vector<thread> vecThread;
 			for (int index = 0; index < threadNum; ++index)
 			{
-				thread t(EvaluateThread, index);
-				t.detach();
-
+				vecThread.push_back(thread(EvaluateThread, index));
 			}
 
-			//就算中断计算，finished也会计算
-			while (finished < evalNum)
-			{
-				if (stop)//检测到停止信号
-				{
-					for (auto& manager : managers)
-						manager->bStopThread = true;
-				}
-				this_thread::sleep_for(10ms);
-			}
+			//启动线程
+			for_each(vecThread.begin(), vecThread.end(), [](auto& t) {t.join(); });
+
+			//弹窗
+			stringstream ss;
+			ss << "评估已结束。" << endl << endl;
+			ss << "完成评估：" << solvedNum << "/" << ret->size();
+
+			MessageBox(ss.str().c_str(), "评估结束", MB_OK | MB_ICONINFORMATION);
 
 			onThread = false;
 

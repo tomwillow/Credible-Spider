@@ -177,7 +177,7 @@ LRESULT DialogSearch::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 				stringstream ss;
 				ss << "找到一组可行解：" << endl << endl;
 				ss << "花色=" << resultManager->autoSolveResult.suit << endl;
-				ss << "seed=" << resultManager->autoSolveResult.seed << endl;
+				ss << "种子=" << resultManager->autoSolveResult.seed << endl;
 				ss << "尝试次数=" << resultManager->autoSolveResult.calc << endl;
 				ss << "难度=" << -10000.0 / resultManager->autoSolveResult.calc + 100.0 << endl;
 

@@ -11,8 +11,6 @@
 class TListView:public TControl
 {
 private:
-	int columnCount;
-	int itemCount;
 public:
 	TListView();
 	TListView(const TListView& listView);
@@ -32,13 +30,19 @@ public:
 //插入项目
 	void AddItem(std::vector<std::string> items);
 
+	void UpdateItem(int index, std::vector<std::string> items);
+
+	void SetItem(int index, int col,std::tstring text);
+
 	std::tstring GetItem(int index, int col);
 
 	std::vector<int> GetCurSel();
 
+	int TListView::GetColumnCount();
 
 	int TListView::GetItemCount();//得到项目数
 
+	void TListView::DeleteAllColumns();//清除全部项
 	void TListView::DeleteAllItems();//清除全部项
 
 	RECT TListView::GetGridRect(int index, int subitem);//根据行号和列号得到格子坐标

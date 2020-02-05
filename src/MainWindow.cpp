@@ -225,7 +225,7 @@ LRESULT MainWindow::OnReNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 LRESULT MainWindow::OnNewGame(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	static bool bOpenDialog = true;
-	static ReturnType ret = { 0 };
+	static ReturnType ret;
 
 	if (wNotifyCode==2)
 	{

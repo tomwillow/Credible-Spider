@@ -117,7 +117,7 @@ public:
 	//播放胜利音乐，并开一个线程刷新烟花动画
 	void Win();
 
-	//返回点是否位于发牌区
+	//返回给定点是否位于发牌区
 	bool PtInRelease(POINT pt);
 #endif
 };

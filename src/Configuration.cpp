@@ -81,8 +81,6 @@ bool Configuration::SaveToFile(std::string fileName)
 
 void Configuration::ReadRecord(FILE* fp)
 {
-	vector<decltype(record1)*> ptsRecord = { &record1,&record2,&record4 };
-	vector<decltype(seedMap1)*> ptsSeedMap = { &seedMap1,&seedMap2,&seedMap4 };
 
 	for (int i = 0; i < 3; ++i)
 	{
@@ -93,42 +91,42 @@ void Configuration::ReadRecord(FILE* fp)
 		{
 			shared_ptr<Record> temp = make_shared<Record>();
 			temp->ReadFromFile(fp);
-			ptsRecord[i]->push_back(temp);
-			(*ptsSeedMap[i])[temp->seed] = temp;
+			record[i].push_back(temp);
+			seedMap[i][temp->seed] = temp;
 		}
 	}
 }
 
 void Configuration::SaveRecord(FILE* fp)
 {
-	vector<decltype(record1)*> ptsRecord = { &record1,&record2,&record4 };
 
 	for (int i = 0; i < 3; ++i)
 	{
-		int sz = ptsRecord[i]->size();
+		int sz = record[i].size();
 		fwrite(&sz, sizeof(sz), 1, fp);
 
 		for (int j = 0; j < sz; ++j)
 		{
-			(*ptsRecord[i])[j]->SaveToFile(fp);
+			record[i][j]->SaveToFile(fp);
 		}
 	}
 }
 
-void Configuration::UpdateRecord(int suitNum, unsigned int seed, int highScore, bool solved, int calc)
+void Configuration::UpdateRecord(int suitNum, unsigned int seed, int highScore, bool solved, int calc,bool hasPrefix)
 {
+	int index = -1;
 	switch (suitNum)
 	{
-	case 1:record = &record1; seedMap = &seedMap1; break;
-	case 2:record = &record2; seedMap = &seedMap2; break;
-	case 4:record = &record4; seedMap = &seedMap4; break;
+	case 1:index = 0; break;
+	case 2:index = 1; break;
+	case 4:index = 2; break;
 	}
 
-	auto it = seedMap->find(seed);
-	if (it == seedMap->end())
+	auto it = seedMap[index].find(seed);
+	if (it == seedMap[index].end())
 	{
-		record->push_back(std::make_shared<Record>(time(0), seed, highScore, 0, calc, false));
-		(*seedMap)[seed] = record->back();
+		record[index].push_back(std::make_shared<Record>(time(0), seed, highScore, 0, calc, false));
+		seedMap[index][seed] = record[index].back();
 	}
 	else
 	{
@@ -139,13 +137,15 @@ void Configuration::UpdateRecord(int suitNum, unsigned int seed, int highScore, 
 		}
 		if (calc)
 		{
+			//之前已经有评估值，未解决，新评估值小于原评估值
 			if (it->second->diff && solved == false && calc <= it->second->diff)
 				;
 			else
 			{
-				it->second->time = time(0);
+				//更新评估值
+				//it->second->time = time(0);
 				it->second->diff = calc;
-				it->second->prefixDiff = solved ? 0 : '>';
+				it->second->prefixDiff = hasPrefix ? '>' : 0;
 			}
 		}
 		if (solved)
@@ -153,5 +153,14 @@ void Configuration::UpdateRecord(int suitNum, unsigned int seed, int highScore, 
 			it->second->time = time(0);
 			it->second->solved = solved;
 		}
+	}
+}
+
+void Configuration::ClearRecord()
+{
+	for (int i = 0; i < 3; ++i)
+	{
+		record[i].clear();
+		seedMap[i].clear();
 	}
 }

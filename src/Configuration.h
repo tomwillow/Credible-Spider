@@ -29,15 +29,26 @@ public:
 	};
 	bool enableAnimation;
 	bool enableSound;
-	std::vector<std::shared_ptr<Record>> record1,record2,record4,*record;
-	std::unordered_map<unsigned int, std::shared_ptr<Record>> seedMap1,seedMap2,seedMap4,*seedMap;
+	using RecordType = std::vector<std::shared_ptr<Record>>;
+	std::vector<RecordType> record;
+
+	using RecordMap = std::unordered_map<unsigned int, std::shared_ptr<Record>>;
+	std::vector<RecordMap> seedMap;
+
+	Configuration() :enableAnimation(true), enableSound(true)
+	{
+		record.resize(3);
+		seedMap.resize(3);
+	}
 
 	bool ReadFromFile(std::string fileName);
 	bool SaveToFile(std::string fileName);
 
-	void UpdateRecord(int suitNum,unsigned int seed, int highScore,bool solved=false,int calc=0);
+	void UpdateRecord(int suitNum,unsigned int seed, int highScore,bool solved=false,int calc=0, bool hasPrefix=false);
 	void ReadRecord(FILE* fp);
 	void SaveRecord(FILE* fp);
+
+	void ClearRecord();
 };
 
 std::string time_tToString(time_t t);

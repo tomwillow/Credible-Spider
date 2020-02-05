@@ -7,14 +7,19 @@
 
 using namespace std;
 
-TListView::TListView():itemCount(0),columnCount(0)
+TListView::TListView()
 {
 }
 
 void TListView::DeleteAllItems()
 {
 	ListView_DeleteAllItems(m_hWnd);
+}
 
+int TListView::GetColumnCount()
+{
+	HWND header=ListView_GetHeader(m_hWnd);
+	return Header_GetItemCount(header);
 }
 
 int TListView::GetItemCount()
@@ -26,12 +31,13 @@ void TListView::AddItem(std::vector<std::string> items)
 {
 	LVITEM lvi = { 0 };
 	lvi.mask = LVIF_TEXT;
-	lvi.iItem = itemCount++;
+	lvi.iItem = GetItemCount();
 
 	for (int i = 0; i < items.size(); ++i)
 	{
-		TCHAR temp[MAX_PATH];
-		strcpy_s(temp, items[i].size() + 1, items[i].c_str());
+		int sz = items[i].length() + 1;
+		TCHAR* temp = new TCHAR[sz];
+		strcpy_s(temp, sz, items[i].c_str());
 		lvi.pszText = temp;
 
 		lvi.iSubItem = i;
@@ -40,7 +46,48 @@ void TListView::AddItem(std::vector<std::string> items)
 			::SendMessage(m_hWnd, LVM_INSERTITEM, 0, (LPARAM)&lvi);
 		else
 			::SendMessage(m_hWnd, LVM_SETITEM, 0, (LPARAM)&lvi);
+
+		delete[] temp;
 	}
+}
+
+void TListView::UpdateItem(int index,std::vector<std::string> items)
+{
+	LVITEM lvi = { 0 };
+	lvi.mask = LVIF_TEXT;
+	lvi.iItem = index;
+
+	for (int i = 0; i < items.size(); ++i)
+	{
+		int sz = items[i].length() + 1;
+		TCHAR* temp = new TCHAR[sz];
+		strcpy_s(temp, sz, items[i].c_str());
+		lvi.pszText = temp;
+
+		lvi.iSubItem = i;
+
+		::SendMessage(m_hWnd, LVM_SETITEM, 0, (LPARAM)&lvi);
+
+		delete[] temp;
+	}
+}
+
+void TListView::SetItem(int index, int col, std::tstring text)
+{
+	LVITEM lvi = { 0 };
+	lvi.mask = LVIF_TEXT;
+	lvi.iItem = index;
+
+	int sz = text.length() + 1;
+	TCHAR* temp = new TCHAR[sz];
+	strcpy_s(temp, sz, text.c_str());
+	lvi.pszText = temp;
+
+	lvi.iSubItem = col;
+
+	::SendMessage(m_hWnd, LVM_SETITEM, 0, (LPARAM)&lvi);
+
+	delete[] temp;
 }
 
 std::tstring TListView::GetItem(int index, int col)
@@ -110,7 +157,7 @@ void TListView::CreateListViewEx(HWND hParent, UINT id, HINSTANCE hInst)
 
 void TListView::InsertColumn(int index, TCHAR text[], int width, int styleLVCFMT)
 {
-	LVCOLUMN lvc = { 0 };
+ 	LVCOLUMN lvc = { 0 };
 	lvc.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_FMT | LVCF_SUBITEM | LVCF_ORDER;
 	lvc.cx = width;
 	lvc.fmt = styleLVCFMT;
@@ -118,12 +165,11 @@ void TListView::InsertColumn(int index, TCHAR text[], int width, int styleLVCFMT
 	lvc.iSubItem = index;
 	lvc.iOrder = index;
 	assert(SendMessage(m_hWnd, LVM_INSERTCOLUMN, index, (LPARAM)&lvc) != -1);
-	columnCount++;
 }
 
 void TListView::AddColumn(TCHAR text[], int width, int styleLVCFMT)
 {
-	InsertColumn(columnCount, text, width, styleLVCFMT);
+	InsertColumn(GetColumnCount(), text, width, styleLVCFMT);
 }
 
 RECT TListView::GetGridRectInMargin(int index, int subitem)

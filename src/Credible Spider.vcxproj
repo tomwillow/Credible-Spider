@@ -88,6 +88,7 @@
     <ClCompile Include="Control\TStatic.cpp" />
     <ClCompile Include="Control\tstring.cpp" />
     <ClCompile Include="Control\TTabControl.cpp" />
+    <ClCompile Include="Dialog\DialogEvaluate.cpp" />
     <ClCompile Include="Dialog\DialogHighScore.cpp" />
     <ClCompile Include="Dialog\DialogSearch.cpp" />
     <ClCompile Include="Dialog\DialogAbout.cpp" />
@@ -130,6 +131,7 @@
     <ClInclude Include="Control\TStatic.h" />
     <ClInclude Include="Control\tstring.h" />
     <ClInclude Include="Control\TTabControl.h" />
+    <ClInclude Include="Dialog\DialogEvaluate.h" />
     <ClInclude Include="Dialog\DialogHighScore.h" />
     <ClInclude Include="Dialog\DialogAbout.h" />
     <ClInclude Include="Dialog\DialogSearch.h" />

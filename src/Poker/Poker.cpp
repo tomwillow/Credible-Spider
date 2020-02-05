@@ -74,7 +74,7 @@ int Poker::GetValue() const
 	//每组完成牌200
 	int value = finished.size()*200;
 
-	//
+	//遍历桌牌
 	for (auto& cards : desk)
 	{
 		if (cards.empty())

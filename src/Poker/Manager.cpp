@@ -699,7 +699,6 @@ bool Manager::DFS(bool& success, int& calc, const string& origTitle, vector<shar
 			static bool bStop = false;
 			node.action->Do(poker);
 
-
 #ifndef _CONSOLE
 			SetWindowText(hWnd, (origTitle + " (Çó½â²½Öè=" + to_string(calc) + ")").c_str());
 			if (poker->hasGUI)

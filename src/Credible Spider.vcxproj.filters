@@ -132,6 +132,9 @@
     <ClCompile Include="ReturnType.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Dialog\DialogEvaluate.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Poker\Poker.h">
@@ -255,6 +258,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ReturnType.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Dialog\DialogEvaluate.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,10 @@
 # 可靠蜘蛛纸牌 Credible-Spider
 
-Video Link: [用C++验证蜘蛛纸牌1、2、4花色有多难（编程自动打蜘蛛纸牌）](https://www.bilibili.com/video/BV19g4y1i7W6/)
+## 视频 Video
+
+Bilibili: [用C++验证蜘蛛纸牌1、2、4花色有多难（编程自动打蜘蛛纸牌）](https://www.bilibili.com/video/BV19g4y1i7W6/)
+
+## 简介 Introduce
 
 保证每一把都是可解问题的蜘蛛纸牌。
 The spider solitaire game that each game is certain to be solved.

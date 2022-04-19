@@ -77,9 +77,13 @@ LRESULT DialogEvaluate::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT DialogEvaluate::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+	mtx.lock();
+
 	//通知manager停止
 	for (auto& manager : managers)
 		manager->bStopThread = true;
+
+	mtx.unlock();
 
 	if (onThread == false)
 		EndDialog(0);
@@ -96,14 +100,12 @@ LRESULT DialogEvaluate::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	{
 	case IDOK:
 	{
-		auto mainThread = [&]()
+		auto mainThread = [this]()
 		{
 			onThread = true;
 
 			//已处理数
 			int solvedNum = 0;
-
-			mutex m;
 
 			//加入待处理队列
 			queue<ReturnType> q;
@@ -111,16 +113,16 @@ LRESULT DialogEvaluate::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 				q.push(returnType);
 
 			//评估线程
-			auto EvaluateThread = [&](int index)
+			auto EvaluateThread = [this,&q,&solvedNum](int index)
 			{
 				while (1)
 				{
-					m.lock();
+					mtx.lock();
 
 					//队列已空，退出
 					if (q.empty())
 					{
-						m.unlock();
+						mtx.unlock();
 						break;
 					}
 
@@ -132,7 +134,7 @@ LRESULT DialogEvaluate::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 					shared_ptr<Manager> manager = make_shared<Manager>(suit, raw.seed);
 					managers.insert(manager);
 
-					m.unlock();
+					mtx.unlock();
 
 					//设置控件
 					vecStatic[index].SetText("线程" + to_string(index) + " 种子=" + to_string(raw.seed));
@@ -142,13 +144,13 @@ LRESULT DialogEvaluate::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 					if (manager->Command("auto"))
 						solvedNum++;
 
-					m.lock();
+					mtx.lock();
 
 					//保存结果
 					(*ret)[raw.seed].solved = manager->autoSolveResult.success;
 					(*ret)[raw.seed].calc = manager->autoSolveResult.calc;
 
-					m.unlock();
+					mtx.unlock();
 
 					//设置控件
 					vecStatic[index].SetText("线程" + to_string(index) + " 已退出。");

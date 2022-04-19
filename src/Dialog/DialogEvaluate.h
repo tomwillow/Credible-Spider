@@ -29,6 +29,8 @@ private:
 	// ‰»Î∆¿π¿◊È
 	std::vector<ReturnType> input;
 
+	std::mutex mtx;
+
 	TButton btnCancel;
 	TStatic staticMemo;
 	std::vector<TStatic> vecStatic;
